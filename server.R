@@ -5,9 +5,14 @@
 
 # Load the packages we need for this App
 source("packages.R")
+source("functions.R")
 
 
 shinyServer(function(input, output, session) {
+  
+  ###################
+  # Reactive Objects #
+  ###################
   
   # Get neurons for plotting and selection table
   vals <- reactiveValues()
@@ -15,7 +20,8 @@ shinyServer(function(input, output, session) {
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
   vals$neurons <- subset(all.neurons,cell.type=="pd2a1")
   vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="pd2a1")[,selected_columns])
-  
+  vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL, CATMAID_warning = FALSE)
+
   # Dynamically create neurons and neuronsDF object
   observeEvent(input$plotneurons, {
     original = vals$neurons
@@ -28,6 +34,10 @@ shinyServer(function(input, output, session) {
     vals$neurons <- c(original,new)
     vals$neuronsDF <- data.table::data.table(vals$neurons[,])
   })
+  
+  #####################
+  # Choose Library LHNs #
+  #####################
   
   # Dynamically update LHN selection, depending on which data type is picked 
   output$LHNselection <- renderUI({
@@ -67,6 +77,10 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  ############
+  # 3D Viewer #
+  ############
+  
   # The 3D RGL window
   output$plot3D <- renderRglwidget({
     # Clear the space
@@ -88,7 +102,7 @@ shinyServer(function(input, output, session) {
     neurons = vals$neurons
     if(length(neurons)>0){
       neurons = update_neurons(input=input,db=neurons)
-      rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE)
+      rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE)
     }
     # Plot PNTs if selected
     pnts_to_plot = c(input$PNT1,input$PNT2,input$PNT3,input$PNT4,input$PNT5,input$PNT6,input$PNT7,input$PNT8,input$PNT9,input$PNT10,
@@ -102,6 +116,10 @@ shinyServer(function(input, output, session) {
     #frontalView()
     rgl::rglwidget()
   })
+  
+  ########################
+  # Neuron Selection Table #
+  ########################
   
   # Show neuron selection table with some table-wide buttons above it
   output$MainTable<-renderUI({
@@ -167,10 +185,9 @@ shinyServer(function(input, output, session) {
     vals$neurons = vals$neurons[-row_to_del] # Update dynamic object
   })
   
-  # Delete rows that have been checked
-  observeEvent(input$Col_row_head,{
-    showModal(modal_recolor_multiple)
-  })
+  ###################################
+  # Compare Selected Neurons in Table #
+  ###################################
   
   # Select neurons from table to compare 
   observeEvent(input$Compare_row_head,{
@@ -189,6 +206,15 @@ shinyServer(function(input, output, session) {
       )
     )
   )
+  
+  ######################
+  # Modify Colours Table #
+  ######################
+  
+  # Delete rows that have been checked
+  observeEvent(input$Col_row_head,{
+    showModal(modal_recolor_multiple)
+  })
   
   # Observe input$lastClick and then act to delete or modify a row
   observeEvent(input$lastClick,
@@ -251,6 +277,10 @@ shinyServer(function(input, output, session) {
     vals$neuronsDF[selected_row,"colour"] <- input$NewColourMultiple
   })
   
+  #################
+  # Download Data #
+  #################
+  
   # Download skeletons in selection table
   observeEvent(input$Download,{
     showModal(modal_download)
@@ -285,6 +315,10 @@ shinyServer(function(input, output, session) {
     },
     contentType = "application/zip"
   )
+  
+  #####################
+  # Plotly E-Phys Data #
+  #####################
   
   # Choose cell types for E-Phys plot 
   output$ChooseCTs <- renderUI({
@@ -381,7 +415,7 @@ shinyServer(function(input, output, session) {
         ct = rownames(data)[i]
         colour = plotting.colours[gsub("#.","",ct)] # make sure neurons of the same cell type are the same colour
         if(grepl("#",ct)){
-          alpha = 1/as.numeric(gsub(".*#","",ct)) # Let alpha indicate the individual in the cell type  
+          alpha = 1.5/as.numeric(gsub(".*#","",ct)) # Let alpha indicate the individual in the cell type  
         }else{
           alpha = 1 # Else a fully opaque line
         }
@@ -512,13 +546,194 @@ shinyServer(function(input, output, session) {
     p
   })
   
+  
+  ####################
+  # Upload a tracing #
+  ####################
+  
+  # Upload a neuron tracing
+  observeEvent(input$Upload,{
+    showModal(modal_upload)
+  })
+  
+  # Upload data
+  modal_upload <-modalDialog(
+    fluidPage(
+      h3(strong("upload tracing"),align="center"),
+      selectInput(inputId = 'TracingType', label = 'upload type', choices = list(`local file`="UserUpload",`CATMAID API`="CATMAID"), selected = list(`local file`="UserUpload")),
+      conditionalPanel(condition = "input.TracingType == 'UserUpload'",
+        HTML("Upload a tracing (e.g. .swc or .rds file) or skeletonised neuron (e.g. .nrrd). 
+               You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
+               The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer. 
+               The tracing to be uploaded must be registered into a standard fly brainspace.
+               Supported neuron file formats include: swc (.swc), vtk (.vtk), fijitraces (.traces, .xml), amiramesh (.am, .amiramesh), hxlines (.am), hxskels (.am), neuroml (.xml, .nml), nrrd (.nrrd, .nhdr), rds (.rds), swcng (.swc), and vaa3draw (.v3d, .v3draw).
+               You can learn more about registering your neuron and bridging it between templates <a href='http://dx.doi.org/10.1016/j.neuron.2016.06.012'>here</a>.
+               See our about section for more information."),             
+        hr(), 
+        fileInput('TracingFile', label = NULL, multiple = TRUE, placeholder = "No file selected"),
+        selectInput('TracingBrain', 'template brain',
+                    choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight (JFRC2)`= "JFRC2",`Revised Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
+                    selected =  list(`FlyCircuit (FCWB)`= "FCWB"),
+                    multiple = FALSE,
+                    selectize = TRUE)
+      ),
+      conditionalPanel(condition = "input.TracingType == 'CATMAID'",
+                       HTML("Upload a synaptic-resolution tracing using the CATMAID API, based on electron microscopy data.
+                            You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
+                            The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer.
+                            To do this, you will need login details to a CATMAID server for fly brain data.
+                            You will need a URL for a CATMAID server and a CATMAID <a href='http://catmaid.readthedocs.io/en/stable/api.html'>token</a>.
+                            You may also need the http author username/author password that optionally secures a CATMAID website.
+                            These are not the same as your CATMAID login details."),             
+                       hr(),
+                       uiOutput("CATMAID_detail_server"),
+                       uiOutput("CATMAID_detail_authname"),
+                       uiOutput("CATMAID_detail_authpassword"),
+                       uiOutput("CATMAID_detail_token"),
+                       selectInput('CATMAID_searchtype', 'search type',
+                                   choices = list(`neuron annotation (regex accepted)`= "annotation",`neuron name (regex accepted)`= "name",`skeleton ID (multiples separated by a space)`= "skid"),
+                                   selected =  list(`neuron name (regex accepted)`= "name"),
+                                   multiple = FALSE,
+                                   selectize = TRUE),
+                       textInput(inputId = "CATMAID_search", label = "search neurons:", value = "", width = NULL, placeholder = "Enter CATMAID search term")
+      ),
+      checkboxInput("TracingMirror", "flip brain-side", value=FALSE),
+      actionButton(inputId = "TracingUploaded",label = "upload",icon = icon("upload")),
+      conditionalPanel(condition = "output.CATMAID_warning == true",
+                       HTML("error")
+      )
+    )
+  )
+  
+  # Show error panel when there's an issue pulling neurons from CATMAID
+  output$CATMAID_warning <- reactive({
+    if(vals$CATMAID$CATMAID_warning==TRUE){
+     return(TRUE) 
+    }else{
+     return(FALSE)
+    }
+  })
+  
+  # Select CATMAID login details, and remember them by using a reactive object!
+  output$CATMAID_detail_server <- renderUI({
+    textInput(inputId = "CATMAID_server", label = "server:", value = vals$CATMAID$CATMAID_server, width = NULL, placeholder = "Enter CATMAID server")
+  })
+  output$CATMAID_detail_authname <- renderUI({
+    textInput(inputId = "CATMAID_authname", label = "CATMAID author:", value = vals$CATMAID$CATMAID_authname, width = NULL, placeholder = "Enter CATMAID author username")
+  })
+  output$CATMAID_detail_authpassword <- renderUI({
+    textInput(inputId = "CATMAID_authpassword", label = "CATMAID password:", value = vals$CATMAID$CATMAID_authpassword, width = NULL, placeholder = "Enter CATMAID author password")
+  })
+  output$CATMAID_detail_token <- renderUI({
+    textInput(inputId = "CATMAID_token", label = "CATMAID token:", value = vals$CATMAID$CATMAID_token, width = NULL, placeholder = "Enter CATMAID token")
+  })
+  #FAFB.conn = catmaid_login(server = "https://neuropil.janelia.org/tracing/fafb/v14/", authname = "fly", authpassword = "superfly", token = "807b759c06f59874fad8a7a42f7ffee1535dd30c")
+  
+  # Add uploaded neurons to vals$neurons and vals$df
+  observeEvent(input$TracingUploaded, {
+    # Create a Progress object
+    progress <- shiny::Progress$new()
+    # Close the progress when this reactive exits (even if there's an error)
+    on.exit(progress$close())
+    progress$set(message = "uploading neurons", value = 0)
+    # update CATMAID login values
+    vals$CATMAID$CATMAID_server = input$CATMAID_server
+    vals$CATMAID$CATMAID_authname = input$CATMAID_authname
+    vals$CATMAID$CATMAID_authpassword = input$CATMAID_authpassword
+    vals$CATMAID$CATMAID_token = input$CATMAID_token
+    vals$CATMAID$CATMAID_warning = FALSE
+    isolate({
+      tracing_neurons <- nat::neuronlist()
+      if(input$TracingType=="CATMAID"){ # Access the catmaid API
+        CATMAID.conn = tryCatch(shiny_catmaid_login(server = input$CATMAID_server,authname = input$CATMAID_authname,authpassword = input$CATMAID_authpassword, token = input$CATMAID_token), error = function(e) NULL)
+        if(input$CATMAID_searchtype!="skid"){
+          skids = paste0(input$CATMAID_searchtype,":",input$CATMAID_search)
+        }else{
+          skids = strsplit(input$CATMAID_search," ") # Separated by a space
+        }
+        progress$inc(1/3, detail = "pulling neurons from CATMAID")
+        tracing_neurons <- tryCatch(elmr::fetchn_fafb(skids = skids, mirror = input$TracingMirror, reference = nat.flybrains::FCWB), error = function(e) NULL)
+        if(is.null(tracing_neurons)){
+          warning("CATMAID pull failed. Login details may be incorrect, search terms do not exist in database.")
+          vals$CATMAID$CATMAID_warning = TRUE
+        }else{
+          progress$inc(2/3, detail = "transforming neurons")
+          # tracing_neurons = nat::nlapply(tracing_neurons,catnat:::resample.catmaidneuron,stepsize = 1) # TODO resample with connectors
+          tdf = as.data.frame(matrix("unknown",nrow = length(tracing_neurons),ncol = length(selected_columns), dimnames = list(names(tracing_neurons),selected_columns)))
+          tdf[,"id"] = tracing_neurons[,"name"]
+          tdf[,"skeleton.type"] = input$TracingType
+          tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
+          attr(tracing_neurons,"df") = tdf # Attach meta data 
+        }
+      }else{ # Add user uploaded file
+        template_brain <- input$TracingBrain
+        for(tracingfile in 1:length(input$TracingFile$name)){ # If multiple selected
+          query_neuron <- input$TracingFile
+          progress$inc(1/3, detail = "reading neurons")
+          if(is.null(query_neuron)) return(NULL)
+          if(grepl("\\.nrrd", query_neuron$name[tracingfile])) { # TODO come up with a heuristic to choose the number of neighbours (k) based on the voxel dimensions
+            tracing_neurons <-  c(tracing_neurons,dotprops_from_nrrd(query_neuron$datapath[tracingfile], k=10))
+          } else {
+            if (grepl("\\.swc|\\.xml|\\.nml\\.vtk\\.traces", query_neuron$name[tracingfile])){
+              tracing_neurons <- c(tracing_neurons,nat:::read.neurons(query_neuron$datapath[tracingfile]))
+            } else if (grepl("\\.rds", query_neuron$name[tracingfile])){
+              tracing_neurons <- base::readRDS(query_neuron$datapath[tracingfile])
+            }else{
+              tracing_neurons <-  c(tracing_neurons,nat:::read.neurons(query_neuron$datapath[tracingfile]))
+              if("neuronlist"%in%class(tracing_neurons)|"neuron"%in%class(tracing_neurons)) {
+                tracing_neurons <-  c(tracing_neurons,nat::dotprops(query_neuron$datapath[tracingfile],k=5))
+              }
+            } # TODO Or some sort of error?  
+          }
+        }
+        progress$inc(2/3, detail = "transforming neurons")
+        tracing_neurons = nat::as.neuronlist(tracing_neurons) # Make sure we are working with 'neuronlist' not 'neuron' objects
+        # Set up metadata
+        tdf = as.data.frame(matrix("unknown",nrow = length(tracing_neurons),ncol = length(selected_columns), dimnames = list(names(tracing_neurons),selected_columns)))
+        if(length(input$TracingFile$name)==length(tracing_neurons)){
+          tdf[,"id"] = rownames(tdf) = input$TracingFile$name
+        }else{
+          tdf[,"id"] = rownames(tdf) = names(tracing_neurons)  
+        }
+        tdf[,"skeleton.type"] = input$TracingType
+        tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
+        attr(tracing_neurons,"df") = tdf # Attach meta data
+        # Comoute transforms
+        if(input$TracingBrain!="FCWB"){ # Transform the brain if it needs to be transformed
+          tracing_neurons = nat.templatebrains::xform_brain(tracing_neurons,sample = input$TracingBrain,reference = FCWB)
+        }
+        if(!"dotprops"%in%class(tracing_neurons)[[1]]){ # Resample to one micron spacing 
+          tracing_neurons = nat::nlapply(tracing_neurons,nat::resample,stepsize = 1)
+        }
+        if(input$TracingMirror){ # Mirror neuron, if that's asked for
+          tracing_neurons = nat.templatebrains::mirror_brain(tracing_neurons,brain = FCWB, mirrorAxis = "X")
+        }
+      }
+    })
+    if(!is.null(tracing_neurons)){
+      progress$inc(1, detail = "plotting neurons")
+      # Now add these to the already selected library neurons
+      original = vals$neurons
+      # Add neurons
+      new = tracing_neurons[!names(tracing_neurons)%in%names(original)] # Prevent neurons of the same name being added together
+      # Neurons are deleted from the selection via an observe app
+      vals$neurons <- c(original,new)
+      vals$neuronsDF <- data.table::data.table(vals$neurons[,])
+    }
+  })
+  
+  
+
+  
+  
   output$Test = renderPrint({
-    s =  input$cts_in_data
+    str(vals$CATMAID)
+    #s =  length(vals$neurons)
     # if(length(s)>0){
     #   s = update_neurons(input=input,db=s)
     # }
     #if (length(s)) {
-    cat(s, sep = ', ')
+    #cat(s, sep = ', ')
     #}
   })
 

@@ -6,6 +6,7 @@
 
 # Load the packages we need for this App
 source("packages.R")
+source("functions.R")
 
 shinyUI(navbarPage("LH Library", id="tab", fluid = TRUE,
   
@@ -82,14 +83,16 @@ tabPanel("Atlas",
                br(),
                checkboxInput(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE),
                hr(),
+               # Refresh button
+               actionButton("Append","append selected neurons"),
+               hr(),
                # Help text
                bsTooltip(id = "lbl_nt", title = "the broadest category for LH neurons", placement = "right", trigger = "hover"),
-               bsTooltip(id = "lbl_pnt", title = "tract that connects somata to the neuropil", placement = "right", trigger = "hover"),
+               bsTooltip(id = "lbl_pnt", title = "tracts connect soma to neuropil", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_ns", title = "neuropils as defined in Ito et al. 2014", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_ds", title = "the dataset in which to search for neuron skeletons", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_bm", title = "FCWB brain mesh made from FlyCircuit data", placement = "right", trigger = "hover"),
-               # Refresh button
-               actionButton("Append","append")
+               actionButton("Upload","upload tracing / CATMAID pull")
              ),
 
         # Show a plot of the brain
@@ -118,8 +121,10 @@ tabPanel("Atlas",
                                ),
                                hr(),
                                plotly::plotlyOutput("OdoursResponses")
-                      )
-                               #verbatimTextOutput('Test'))
+                      ),
+                      tabPanel("Test",
+                               verbatimTextOutput('Test')
+                               )
                       )
           )
        )
