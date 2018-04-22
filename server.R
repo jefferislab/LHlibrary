@@ -627,8 +627,7 @@ shinyServer(function(input, output, session) {
   output$CATMAID_detail_token <- renderUI({
     textInput(inputId = "CATMAID_token", label = "CATMAID token:", value = vals$CATMAID$CATMAID_token, width = NULL, placeholder = "Enter CATMAID token")
   })
-  #FAFB.conn = catmaid_login(server = "https://neuropil.janelia.org/tracing/fafb/v14/", authname = "fly", authpassword = "superfly", token = "807b759c06f59874fad8a7a42f7ffee1535dd30c")
-  
+
   # Add uploaded neurons to vals$neurons and vals$df
   observeEvent(input$TracingUploaded, {
     # Create a Progress object
