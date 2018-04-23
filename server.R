@@ -572,7 +572,7 @@ shinyServer(function(input, output, session) {
         hr(), 
         fileInput('TracingFile', label = NULL, multiple = TRUE, placeholder = "No file selected"),
         selectInput('TracingBrain', 'template brain',
-                    choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight (JFRC2)`= "JFRC2",`Revised Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
+                    choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight/VFB (JFRC2010/JFRC2)`= "JFRC2",`Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
                     selected =  list(`FlyCircuit (FCWB)`= "FCWB"),
                     multiple = FALSE,
                     selectize = TRUE)
