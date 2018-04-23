@@ -94,7 +94,6 @@ tabPanel("Atlas",
                bsTooltip(id = "lbl_bm", title = "FCWB brain mesh made from FlyCircuit data", placement = "right", trigger = "hover"),
                actionButton("Upload","upload tracing / CATMAID pull")
              ),
-
         # Show a plot of the brain
         mainPanel(
           includeCSS("loader.css"), # Load spinny waiting wheel
@@ -128,11 +127,53 @@ tabPanel("Atlas",
                       )
           )
        )
-       
-       
-       
-       
     ),
+###################
+# NBLast neurons #
+###################
+tabPanel("NBLAST",
+         sidebarLayout(
+           sidebarPanel(
+             HTML("Enter a FlyCircuit neuron id to compare against all FlyCircuit neurons, with NBLAST. 
+                  If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged, 
+                  rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b> 
+                  in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: red;'>red = best</span> to <span style='color: #FF0099;'>pink = worst</span>)."),
+             HTML("<a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>What do these scores mean?</a>"),
+             hr(),
+             selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
+             conditionalPanel(condition="input.QueryType =='UserUpload'",
+                              uiOutput("ChooseUploadedSkeletons")
+             ),
+             sliderInput(inputId = "NumHits",label = "no. hits to visualise", 1, 100, 10, 1),
+             checkboxInput("all_use_mean", label="Use mean scores", value=FALSE),
+             HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too. 
+                  This is particularly useful for clustering neurons into types, rather than, 
+                  for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
+             submitButton("NBLAST")
+             ),
+         mainPanel(
+           h2("3D view"),
+           includeCSS("loader.css"),
+           HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
+           HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+           rglwidgetOutput("view3d_tracing", width="800px", height="800px"),
+           conditionalPanel(condition = "output.tracing_nblast_complete",
+                            h2("NBLAST results"),
+                            HTML("<a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>What do these scores mean?</a>"),
+                            br(),
+                            downloadButton('tracing_nblast_results_download', 'Download all scores as CSV'),
+                            h3("Top 10 hits"),
+                            htmlOutput("tracing_nblast_results_viewer"),
+                            tableOutput("tracing_nblast_results_top10"),
+                            h3("Score distribution"),
+                            plotOutput("tracing_nblast_results_plot")
+           )
+         )
+      )
+    ),
+
+
+
 
 #########
 # About #

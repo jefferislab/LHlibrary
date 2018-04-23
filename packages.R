@@ -51,6 +51,16 @@ cells = paste0("nm20",names(dye.fills))
 cells = cells[cells%in%names(physplitdata::smSpikes)]
 dye.fills = dye.fills[cells%in%names(physplitdata::smSpikes)] # Final list of neurons for which there is e-phy data
 
+# Get the main dotprops object
+most.lhns.dps.clean = subset(lhns::most.lhns.dps,good.trace==TRUE) # Remove neurons that look like mistakes
+all.neurons.dps = c(most.lhns.dps.clean, lh.splits.clean)
+df = all.neurons.dps[,]
+df = df[,c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "neurotransmitter","skeleton.type")]
+colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type")
+df[is.na(df)] = " "
+attr(all.neurons.dps,"df") = df
+all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
+
 # Get the E-Phys data
 ephys.lhns = physplit.analysis::create_raw_summary_array(x = physplitdata::smSpikes, cells = cells)
 odours = colnames(ephys.lhns)
