@@ -572,7 +572,7 @@ shinyServer(function(input, output, session) {
         hr(), 
         fileInput('TracingFile', label = NULL, multiple = TRUE, placeholder = "No file selected"),
         selectInput('TracingBrain', 'template brain',
-                    choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight (JFRC2)`= "JFRC2",`Revised Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
+                    choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight/VFB (JFRC2010/JFRC2)`= "JFRC2",`Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
                     selected =  list(`FlyCircuit (FCWB)`= "FCWB"),
                     multiple = FALSE,
                     selectize = TRUE)
@@ -583,7 +583,7 @@ shinyServer(function(input, output, session) {
                             The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer.
                             To do this, you will need login details to a CATMAID server for fly brain data.
                             You will need a URL for a CATMAID server and a CATMAID <a href='http://catmaid.readthedocs.io/en/stable/api.html'>token</a>.
-                            You may also need the http author username/author password that optionally secures a CATMAID website.
+                            You may also need the http basic authorisation username/password that optionally secure a CATMAID website.
                             These are not the same as your CATMAID login details."),             
                        hr(),
                        uiOutput("CATMAID_detail_server"),
