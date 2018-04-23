@@ -26,13 +26,11 @@ tabPanel("Atlas",
                icon(">>"), # We seem to need this line for the question bubbles to appear, for some reason?
                HTML("Enter the instinct centre of the vinegar fly, <i>Drosophila melanogaster</i>"),
                hr(),
-               conditionalPanel( condition = "output.nneurons",
-                                 checkboxInput("headonly", "Only use first 1000 rows")),
                selectInput(inputId='SkeletonType', label='dataset:'%>%label.help("lbl_ds"), choices = sort(unique(all.neurons[,"skeleton.type"])), selected = "FlyCircuit", multiple=TRUE, selectize=TRUE),
                hr(),
                selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = c("example (pd2a1)",sort(unique(all.neurons[,"type"])), "user upload"), selected = "Example (pd2a1)", multiple=FALSE, selectize=TRUE),
                hr(),
-               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'",
+               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'", # Why does this sometimes work and sometimes not?
                   h5("Select specific cell types"),
                   uiOutput("LHNselection"), #selectInput(inputId='lhns', label='LHNs:'%>%label.help("lbl_lhn"), choices = c("all LHNs",sort(unique(all.neurons[,"cell.type"]))), selected = "pd2a1", multiple=TRUE, selectize=TRUE),
                   hr()
@@ -121,33 +119,34 @@ tabPanel("Atlas",
                                hr(),
                                plotly::plotlyOutput("OdoursResponses")
                       ),
-                      tabPanel("Test",
-                               verbatimTextOutput('Test')
-                               )
+                      tabPanel("Split Gal4 lines",
+                                 verbatimTextOutput('Test')
                       )
+
+                  )
           )
        )
     ),
+
 ###################
 # NBLast neurons #
 ###################
+
 tabPanel("NBLAST",
          sidebarLayout(
            sidebarPanel(
-             HTML("Enter a FlyCircuit neuron id to compare against all FlyCircuit neurons, with NBLAST. 
-                  If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged, 
-                  rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b> 
+             HTML("Enter a FlyCircuit neuron id to compare against all FlyCircuit neurons, with NBLAST.
+                  If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
+                  rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b>
                   in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: red;'>red = best</span> to <span style='color: #FF0099;'>pink = worst</span>)."),
              HTML("<a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>What do these scores mean?</a>"),
              hr(),
              selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
-             conditionalPanel(condition="input.QueryType =='UserUpload'",
-                              uiOutput("ChooseUploadedSkeletons")
-             ),
-             sliderInput(inputId = "NumHits",label = "no. hits to visualise", 1, 100, 10, 1),
-             checkboxInput("all_use_mean", label="Use mean scores", value=FALSE),
-             HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too. 
-                  This is particularly useful for clustering neurons into types, rather than, 
+             uiOutput("ChooseUploadedSkeletons"),
+             sliderInput(inputId = "NumHits",label = "no. hits to visualise:", 1, 100, 10, 1),
+             checkboxInput("UseMean", label="Use mean scores", value=FALSE),
+             HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
+                  This is particularly useful for clustering neurons into types, rather than,
                   for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
              submitButton("NBLAST")
              ),

@@ -85,8 +85,6 @@ shinyServer(function(input, output, session) {
   output$plot3D <- renderRglwidget({
     # Clear the space
     rgl::clear3d()
-    rgl::open3d(mouseMode = c("trackball", "user", "zoom"), FOV = 0) # Hmm, how can we get this thing to pan?
-    nat:::pan3d(2)
     # Plot brain
     if(input$BrainMesh){
       rgl::plot3d(FCWB, alpha = 0.1,skipRedraw = TRUE)
@@ -123,8 +121,8 @@ shinyServer(function(input, output, session) {
   
   # Show neuron selection table with some table-wide buttons above it
   output$MainTable<-renderUI({
-    fluidPage(
-        box(width=12,
+    shiny::fluidPage(
+      box(width=12,
             column(6,offset = 0,
                    HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
@@ -133,7 +131,7 @@ shinyServer(function(input, output, session) {
                    actionButton(inputId = "Download",label = "download data"),
                    HTML('</div>')
             ),
-            column(width = 12, 
+            shiny::column(width = 12, 
                    DT::dataTableOutput("SelectionTable") 
                    ),
               tags$script(HTML('$(document).on("click", "input", function () {
@@ -437,6 +435,7 @@ shinyServer(function(input, output, session) {
       }
     }
     p <- layout(p,margin = list(b = 200),yaxis = list (title = "spike number")) # margin arument prevents x-axis cut off
+    p$elementId <- NULL
     p
   })
   
@@ -543,6 +542,7 @@ shinyServer(function(input, output, session) {
       }
     }
     p <- layout(p,margin = list(b = 160),yaxis = list (title = "spike number"))
+    p$elementId <- NULL # Avoid R Shiny warning abotu unusd unique plotly IDs
     p
   })
   
@@ -711,68 +711,75 @@ shinyServer(function(input, output, session) {
   # NBLAST #
   #########
   
-  # Dynamically update Uploaded Neurons selection 
+  # Dynamically update Uploaded Neurons selection
   output$ChooseUploadedSkeletons <- renderUI({
-      if(input$UserType=="UserUpload"){
+    if(input$QueryType=="UserUpload"){
         uploaded.neurons = subset(vals$neurons,skeleton.type%in%c("UserUpload","CATMAID"))
+        Upload_choices = names(uploaded.neurons)
         if(length(Upload_choices)==0){
           Upload_choices = "no user uploaded neurons"
         }
-        selectInput("UploadedSkeletons", label = paste0("uploaded neurons (",length(Upload_choices),") :"), choices = Upload_choices,selected = Upload_choices[1], multiple=TRUE, selectize=TRUE)
-      }
+        selectInput("UploadedSkeletons", label = paste0("uploaded neurons (",length(uploaded.neurons),") :"), choices = Upload_choices,selected = Upload_choices[1], multiple=TRUE, selectize=TRUE)
+    }
   })
-  
+
+  # Get tracing to NBLAST
+  tracings <- reactive({
+    nat::dotprops(vals$neurons[input$UploadedSkeletons])
+  })
+
+  # Get the NBLAST tracing scores for the uploaded object
   tracing_nblast_scores <- reactive({
-    query_neuron <- tracing()
-    if(is.null(query_neuron)) return(NULL)
+    query_neurons <- vals$neurons[input$UploadedSkeletons]
+    query_neurons.dps = nat::dotprops(query_neurons)
+    if(is.null(query_neurons)) {return(NULL)}
     scores <- list()
-    withProgress(min=1, max=10, message="NBLAST in progress", expr={
+    shiny::withProgress(min=1, max=10, message="NBLAST in progress", expr={ # NBLAST progress bar
       for(i in 1:10) {
-        if(!input$.tracing_all_neurons) {
-          chunk <- split(1:length(exemplars), cut(1:length(exemplars), 10))[[i]]
-          if(input$.tracing_use_mean) {
-            scores[[i]] <- (nblast(dotprops(query_neuron), dps[exemplars[chunk]], normalised=TRUE) + nblast(dps[exemplars[chunk]], dotprops(query_neuron), normalised=TRUE)) / 2
+          chunk <- split(1:length(all.neurons.dps), cut(1:length(all.neurons.dps), 10))[[i]]
+          if(input$UseMean) {
+            if(length(query_neurons.dps)>1){
+              mean.score <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE) + t(nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE))) / 2
+              mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
+              scores[[i]] <- mean.score
+            }else{
+              scores[[i]] <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE) + nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE)) / 2
+            }
           } else {
-            scores[[i]] <- nblast(dotprops(query_neuron), dps[exemplars[chunk]])
+            if(length(query_neurons.dps)>1){
+              mean.score <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk])
+              mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
+              scores[[i]] <- mean.score
+            }else{
+              scores[[i]] <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk])
+            }
           }
-        } else {
-          chunk <- split(1:length(dps), cut(1:length(dps), 10))[[i]]
-          if(input$.tracing_use_mean) {
-            scores[[i]] <- (nblast(dotprops(query_neuron), dps[chunk], normalised=TRUE) + nblast(dps[chunk], dotprops(query_neuron), normalised=TRUE)) / 2
-          } else {
-            scores[[i]] <- nblast(dotprops(query_neuron), dps[chunk])
-          }
-        }
-        setProgress(value=i)
+          shiny::setProgress(value=i)
       }
     })
-    unlist(scores)
+    scores = base::unlist(scores,use.names = TRUE) # Unlist, preserve names
+    names(scores) = names(all.neurons.dps) # Hmm, make sure names are preserved
+    scores
   })
-  
+
+  # Plot the tracing scores result
   output$tracing_nblast_results_plot <- renderPlot({
-    scores <- tracing_nblast_scores()
+    scores <- tracing_nblast_scores() # Get the reactive tracing_nblast_scores object
     if(is.null(scores)) return(NULL)
-    nblast_results <- data.frame(scores=scores)
-    p <- ggplot(nblast_results, aes(x=scores)) + geom_histogram(binwidth=diff(range(nblast_results$scores))/100) + xlab("NBLAST score") + ylab("Frequency density") + geom_vline(xintercept=0, colour='red')
+    nblast_results <- base::data.frame(scores=scores)
+    p <- ggplot2::ggplot(nblast_results, aes(x=scores)) + ggplot2::geom_histogram(binwidth=diff(range(nblast_results$scores))/100) + xlab("NBLAST score") + ylab("Frequency density") + geom_vline(xintercept=0, colour='red')
     p
   })
-  
-  output$tracing_nblast_results_plot <- renderPlot({
-    scores <- tracing_nblast_scores()
-    if(is.null(scores)) return(NULL)
-    nblast_results <- data.frame(scores=scores)
-    p <- ggplot(nblast_results, aes(x=scores)) + geom_histogram(binwidth=diff(range(nblast_results$scores))/100) + xlab("NBLAST score") + ylab("Frequency density") + geom_vline(xintercept=0, colour='red')
-    p
-  })
-  
+
+  # Visualise the NBLAST results
   output$tracing_nblast_results_viewer <- renderText({
     scores <- tracing_nblast_scores()
     if(is.null(scores)) return(NULL)
     top10 <- sort(scores, decreasing=TRUE)[1:10]
-    top10n <- fc_neuron(names(top10))
+    top10n <- names(top10)
     vfb_link(top10n)
   })
-  
+
   output$tracing_nblast_results_top10 <- renderTable({
     query_neuron <- tracing()
     scores <- tracing_nblast_scores()
@@ -780,7 +787,7 @@ shinyServer(function(input, output, session) {
     names(scores) <- fc_neuron(names(scores))
     data.frame(scores=sort(scores, decreasing=TRUE)[1:10],normalised_scores=sort(scores/nblast(dotprops(query_neuron), dotprops(query_neuron)), decreasing=TRUE)[1:10], flycircuit=sapply(names(sort(scores, decreasing=TRUE)[1:10]), flycircuit_link), vfb=sapply(names(sort(scores, decreasing=TRUE)[1:10]), vfb_link), cluster=sapply(names(sort(scores, decreasing=TRUE)[1:10]), cluster_link), type=sapply(names(sort(scores, decreasing=TRUE)[1:10]), function(x) link_for_neuron_type(type_for_neuron(x))))
   }, sanitize.text.function = force)
-  
+
   output$tracing_nblast_results_download <- downloadHandler(
     filename = function() {  paste0(input$.tracing_file$name, '_nblast_results_', Sys.Date(), '.csv') },
     content = function(file) {
@@ -790,13 +797,13 @@ shinyServer(function(input, output, session) {
       write.csv(score_table, file, row.names=FALSE)
     }
   )
-  
+
   output$tracing_nblast_complete <- reactive({
     scores <- tracing_nblast_scores()
     return(ifelse(is.null(scores), FALSE, TRUE))
   })
   outputOptions(output, 'tracing_nblast_complete', suspendWhenHidden=FALSE)
-  
+
   output$view3d_tracing <- renderRglwidget({
     clear3d()
     query_neuron <- tracing()
@@ -810,19 +817,19 @@ shinyServer(function(input, output, session) {
     frontalView()
     rglwidget()
   })
-  
+
   #########
   # TEST #
   #########
   
   output$Test = renderPrint({
-    str(vals$CATMAID)
-    #s =  length(vals$neurons)
+    #str(vals$CATMAID)
+    s =  length(vals$neuronsDF)
     # if(length(s)>0){
     #   s = update_neurons(input=input,db=s)
     # }
     #if (length(s)) {
-    #cat(s, sep = ', ')
+    cat(s, sep = ', ')
     #}
   })
 

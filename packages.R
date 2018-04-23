@@ -91,3 +91,13 @@ all.lh.pnts = c("ad1", "ad2", "ad3", "ad4", "ad5", "av1", "av2", "av3",
 pnt_all = sort(unique(all.neurons[,"pnt"]))
 pnt_choices = list(`Anterior dorsal`=pnt_all[grepl("^ad",pnt_all)],`Anterior ventral`=pnt_all[grepl("^av",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pd",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pv",pnt_all)]) 
 
+# Load VFB ID lookup table
+vfb_ids=readRDS('data/vfb_ids.rds')
+
+# Load VFB annotation ID lookup table
+vfb_annotations <- read.table("data/annotation_map.tsv", header=TRUE, sep="\t", quote = "")
+
+# Get the GMR line URLs
+gmr_stack_urls=readRDS('data/gmr_stack_urls.rds')
+
+

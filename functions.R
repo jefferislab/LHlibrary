@@ -5,6 +5,7 @@ label.help <- function(label,id){
   HTML(paste0(label,actionLink(id,label=NULL,icon=icon('question-circle'))))
 }
 
+# Get neurons that have been selected
 get_neurons<-function(input, db){
   if(grepl("xample",input$Type)){
     cts = "pd2a1"
@@ -32,6 +33,7 @@ get_neurons<-function(input, db){
   neurons
 }
 
+# Update the neuron selection
 update_neurons <- function(input,db){
   if(!is.null(input$SelectionTable_rows_selected)){ # Don't show neurons highlighted in selection table
     db = db[-input$SelectionTable_rows_selected]
@@ -214,4 +216,19 @@ shiny_catmaid_connection <-function (server, username = NULL, password = NULL, a
   invisible(conn)
 }
 
+
+vfb_url <- function(neuron_name, style=c("dev", "old")) {
+  style=match.arg(style, c("dev", "old"))
+  vfb_id <- as.character(vfb_ids[vfb_ids$Name %in% neuron_name, 'vfbid'])
+  if(style=='old'){
+    paste0("http://www.virtualflybrain.org/site/tools/view_stack/3rdPartyStack.htm?json=FlyCircuit2012/", neuron_name, "/wlz_meta/tiledImageModelData.jso&type=THIRD_PARTY_STACK&tpbid=", vfb_id)
+  } else {
+    paste0("http://www.virtualflybrain.org/site/stacks/index.htm?add=", paste0(vfb_id, collapse=','), "&clear=true")
+  }
+}
+
+vfb_link <- function(neuron_name) {
+  url <- vfb_url(neuron_name)
+  paste0("<a target='_blank' href='", url, "'>View in Virtual Fly Brain stack browser</a>")
+}
 
