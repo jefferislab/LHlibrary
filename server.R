@@ -583,7 +583,7 @@ shinyServer(function(input, output, session) {
                             The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer.
                             To do this, you will need login details to a CATMAID server for fly brain data.
                             You will need a URL for a CATMAID server and a CATMAID <a href='http://catmaid.readthedocs.io/en/stable/api.html'>token</a>.
-                            You may also need the http author username/author password that optionally secures a CATMAID website.
+                            You may also need the http basic authorisation username/password that optionally secure a CATMAID website.
                             These are not the same as your CATMAID login details."),             
                        hr(),
                        uiOutput("CATMAID_detail_server"),
