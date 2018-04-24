@@ -17,7 +17,7 @@ shinyUI(navbarPage("LH Library", id="tab", fluid = TRUE,
   # View LHN library #
   ###################
   
-tabPanel("Atlas",
+tabPanel("Explore",
           includeCSS("errors.css"),
           shinyURL.ui(display=F),
           sidebarLayout(
@@ -28,12 +28,12 @@ tabPanel("Atlas",
                hr(),
                selectInput(inputId='SkeletonType', label='dataset:'%>%label.help("lbl_ds"), choices = sort(unique(all.neurons[,"skeleton.type"])), selected = "FlyCircuit", multiple=TRUE, selectize=TRUE),
                hr(),
-               selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = c("example (pd2a1)",sort(unique(all.neurons[,"type"])), "user upload"), selected = "Example (pd2a1)", multiple=FALSE, selectize=TRUE),
+               selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = list(`example (pd2a1)`="example",`LH ouput neurons`= "ON",`LH local neurons`= "LN",`LH input neurons`= "IN", `MBONs`= "MBON"), selected = list(`example (pd2a1)`="example"), multiple=FALSE, selectize=TRUE),
                hr(),
                conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'", # Why does this sometimes work and sometimes not?
-                  h5("Select specific cell types"),
-                  uiOutput("LHNselection"), #selectInput(inputId='lhns', label='LHNs:'%>%label.help("lbl_lhn"), choices = c("all LHNs",sort(unique(all.neurons[,"cell.type"]))), selected = "pd2a1", multiple=TRUE, selectize=TRUE),
-                  hr()
+                                h5("Select specific cell types"),
+                                uiOutput("LHNselection"),
+                                hr()
                ),
                conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'",
                   h5("Or search groups of lateral horn neurons"),
@@ -41,6 +41,17 @@ tabPanel("Atlas",
                   uiOutput("AGselection"),
                   uiOutput("CTselection"),
                   hr()
+               ),
+               conditionalPanel(condition="input.Type =='MBON'",
+                                h5("Or search mushroom body output neurons"),
+                                uiOutput("MBONselection"),
+                                hr()
+               ),
+               conditionalPanel(condition="input.Type =='IN'",
+                                h5("Or search projection neurons"),
+                                uiOutput("PNtype"),
+                                uiOutput("PNselection"),
+                                hr()
                ),
                selectInput(inputId='neuropils', label= 'see neuropils:'%>%label.help("lbl_ns"), choices = c("all neuropils",sort(FCWBNP.surf$RegionList)), selected = "LH_R", multiple=TRUE, selectize=TRUE),
                # Choose which primary neurite tractsw to plot
@@ -120,7 +131,11 @@ tabPanel("Atlas",
                                plotly::plotlyOutput("OdoursResponses")
                       ),
                       tabPanel("Split Gal4 lines",
-                                 verbatimTextOutput('Test')
+                               br(),
+                               uiOutput("LineCTs"),
+                               uiOutput("LineCode"),
+                               #imageOutput("MaximalProjection")
+                               img(src = "example.png")
                       )
 
                   )
@@ -135,43 +150,83 @@ tabPanel("Atlas",
 tabPanel("NBLAST",
          sidebarLayout(
            sidebarPanel(
-             HTML("Enter a FlyCircuit neuron id to compare against all FlyCircuit neurons, with NBLAST.
+             h2("NBLAST Against the LH Library"),
+             HTML("Want to know what cell type your neuron belongs to? Or find a genetic line for it? 
+                  Choose a neuron from out library or a neuron you have uploaded and blast it against our library.
                   If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
                   rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b>
-                  in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: red;'>red = best</span> to <span style='color: #FF0099;'>pink = worst</span>)."),
-             HTML("<a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>What do these scores mean?</a>"),
+                  in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: #F21A00;'>red = best</span> to <span style='color: #3B9AB2;'>cyan = worst</span>)."),
+             HTML("See what the scores mean <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>here</a>"),
+             hr(),
+             strong("To NBLAST neurons they must be in the neuron selection table, in the Explore tab"),
              hr(),
              selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
              uiOutput("ChooseUploadedSkeletons"),
+             uiOutput("NBLAST_SkeletonType"),
+             uiOutput("NBLAST_ChooseFromLibrary"),
+             uiOutput("NBLAST_ChooseID"),
+             HTML("<i>If multiple neurons are chosen, NBLAST scores will be averaged across these neurons. I.e. they will be treated as one amalgamated neuron</i><br /><br />"),
              sliderInput(inputId = "NumHits",label = "no. hits to visualise:", 1, 100, 10, 1),
-             checkboxInput("UseMean", label="Use mean scores", value=FALSE),
+             checkboxInput("UseMean", label="Use mean scores", value= TRUE),
              HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
                   This is particularly useful for clustering neurons into types, rather than,
                   for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
-             submitButton("NBLAST")
+             actionButton("NBLASTGO","NBLAST")
              ),
          mainPanel(
            h2("3D view"),
            includeCSS("loader.css"),
            HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
            HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
-           rglwidgetOutput("view3d_tracing", width="800px", height="800px"),
+           rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
            conditionalPanel(condition = "output.tracing_nblast_complete",
-                            h2("NBLAST results"),
-                            HTML("<a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>What do these scores mean?</a>"),
-                            br(),
-                            downloadButton('tracing_nblast_results_download', 'Download all scores as CSV'),
-                            h3("Top 10 hits"),
-                            htmlOutput("tracing_nblast_results_viewer"),
-                            tableOutput("tracing_nblast_results_top10"),
                             h3("Score distribution"),
-                            plotOutput("tracing_nblast_results_plot")
+                            plotOutput("NBLAST_results_plot"),
+                            h2("NBLAST results"),
+                            uiOutput("NBLAST_MainTable"),
+                            br(),
+                            downloadButton('NBLAST_results_download', 'Download all scores as CSV')
            )
          )
       )
     ),
 
+###################
+# LH Naming System #
+###################
+tabPanel("LH Naming System",
+         HTML("This web app accompanies <a href='http://dx.doi.org/10.1016/j.neuron.2016.06.012'>Costa et al. NBLAST: Rapid, sensitive comparison of neuronal structure and construction of neuron family databases. Neuron (2016)</a>. A pre-print version is available from <a href='http://dx.doi.org/10.1101/006346'>BiorXiv: Costa et al. (2014)</a>. More information on other NBLAST resources is available <a href='http://jefferislab.org/si/nblast'>here</a>. NBLAST on-the-fly acts as a demonstration of the core NBLAST algorithm (package <a href='https://github.com/jefferislab/nat.nblast'>nat.nblast</a>), along with some features of the <a href='https://github.com/jefferis/nat'>NeuroAnatomy Toolbox</a> and its helper packages: <a href='https://github.com/jefferislab/nat.templatebrains'>nat.templatebrains</a> and <a href='https://github.com/jefferislab/nat.flybrains'>nat.flybrains</a>. Other resources available are listed <a href='http://jefferislab.org/si/nblast/www/'>here</a>. For further information on how we convert data between template brains, see <a href='http://jefferislab.org/si/bridging/'>here</a>."),
+         img(src='LHN_naming_cartoon.png', width="732px", height="1170", align = "center"),
+         hr(),
+         HTML("Protocols for <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071720.full'>immunostaining and imaging fly brains</a>, as well as <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071738.full'>registration of the resulting images</a> are available from Cold Spring Harbor Protocols. We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions'>here</a>.")
+),
 
+###############
+# Publications #
+###############
+tabPanel("Publications",
+         HTML("This web app accompanies <a href='http://dx.doi.org/10.1016/j.neuron.2016.06.012'>Costa et al. NBLAST: Rapid, sensitive comparison of neuronal structure and construction of neuron family databases. Neuron (2016)</a>. A pre-print version is available from <a href='http://dx.doi.org/10.1101/006346'>BiorXiv: Costa et al. (2014)</a>. More information on other NBLAST resources is available <a href='http://jefferislab.org/si/nblast'>here</a>. NBLAST on-the-fly acts as a demonstration of the core NBLAST algorithm (package <a href='https://github.com/jefferislab/nat.nblast'>nat.nblast</a>), along with some features of the <a href='https://github.com/jefferis/nat'>NeuroAnatomy Toolbox</a> and its helper packages: <a href='https://github.com/jefferislab/nat.templatebrains'>nat.templatebrains</a> and <a href='https://github.com/jefferislab/nat.flybrains'>nat.flybrains</a>. Other resources available are listed <a href='http://jefferislab.org/si/nblast/www/'>here</a>. For further information on how we convert data between template brains, see <a href='http://jefferislab.org/si/bridging/'>here</a>."),
+         h3("Video demos"),
+         HTML("Video demos showing how to use this web app and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/'>here</a>."),
+         h3("More help"),
+         HTML("If you require information not contained in the manuscript, you can use the <a href='https://groups.google.com/forum/#!forum/nat-user'>nat-user google group</a> shown below. Searching the archive is available to all. To post a question you will first need to request to join the group.<br />
+              
+              <iframe id='forum_embed' src='javascript:void(0)' scrolling='no' frameborder='0' width='900' height='700'>
+              </iframe>
+              
+              <script type='text/javascript'>
+              document.getElementById('forum_embed').src =
+              'https://groups.google.com/forum/embed/?place=forum/nat-user' +
+              '&showsearch=true&showpopout=true&hideforumtitle=true&h1&fragments=true&parenturl=' +
+              encodeURIComponent(window.location.href);
+              </script>"),
+         h3("Local installation"),
+         HTML("Instructions on how to install this app locally are <a href='https://github.com/jefferislab/NBLAST_on-the-fly'>here</a>, along with a video demo <a href='http://jefferislab.org/si/nblast/www/demos/#nblast-online'>here</a>."),
+         h3("Source code"),
+         HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab/NBLAST_online'>GitHub</a>."),
+         h3("Preparing own data"),
+         HTML("Protocols for <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071720.full'>immunostaining and imaging fly brains</a>, as well as <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071738.full'>registration of the resulting images</a> are available from Cold Spring Harbor Protocols. We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions'>here</a>.")
+),
 
 
 #########

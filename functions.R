@@ -9,7 +9,7 @@ label.help <- function(label,id){
 get_neurons<-function(input, db){
   if(grepl("xample",input$Type)){
     cts = "pd2a1"
-  }else{
+  }else if (is_lhn_type(input$Type)){
     if(sum(grepl("all",input$CT))>0){
       if(sum(grepl("all",input$AG))>0){
         AG = subset(db[,],pnt%in%input$PNT)[,"anatomy.group"]
@@ -27,9 +27,15 @@ get_neurons<-function(input, db){
     }
     cts = unique(c(lhn.cts,CT))
     cts = cts[cts%in%db[,"cell.type"]]
+  }else if(input$Type=="MBON"){
+    cts = input$MBON
+  }else if (grepl("IN",input$Type)){
+    cts = input$PN
+  }else{
+    cts = NULL
   }
   neurons = subset(db,skeleton.type%in%input$SkeletonType&cell.type%in%cts)
-  neurons[,"colour"] = darjeeling(length(neurons))
+  neurons[,"colour"] = darjeeling(length(neurons)) # Assign darjeeling colours
   neurons
 }
 
@@ -230,5 +236,9 @@ vfb_url <- function(neuron_name, style=c("dev", "old")) {
 vfb_link <- function(neuron_name) {
   url <- vfb_url(neuron_name)
   paste0("<a target='_blank' href='", url, "'>View in Virtual Fly Brain stack browser</a>")
+}
+
+is_lhn_type <- function(type){
+  sum(sapply(c("^ON","^LN","^LHN"),grepl,type))>0
 }
 

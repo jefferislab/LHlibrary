@@ -23,43 +23,75 @@ library(packrat)
 library(lhns)
 library(wesanderson)
 library(data.table)
+library(ggplot2)
+
+
+# Quick fix while lhns is not working
+load("/Users/abates/projects/lhns/data/almost.lh.splits.rda")
+load("/Users/abates/projects/lhns/data/lhon.splits.rda")
+load("/Users/abates/projects/lhns/data/lhin.splits.rda")
+load("/Users/abates/projects/lhns/data/lhln.splits.rda")
+load("/Users/abates/projects/lhns/data/most.lhns.rda")
+load("/Users/abates/projects/lhns/data/most.lhns.dps.rda")
+load("/Users/abates/projects/lhns/data/most.lhins.rda")
+load("/Users/abates/projects/lhns/data/most.lhins.dps.rda")
+load("/Users/abates/projects/lhns/data/emlhns.rda")
+load("/Users/abates/projects/lhns/data/emlhns.dps.rda")
+load("/Users/abates/projects/lhns/data/primary.neurite.tracts.rda")
+load("/Users/abates/projects/lhns/data/mbons.light.dps.rda")
+load("/Users/abates/projects/lhns/data/light.pn.axons.rda")
+load("/Users/abates/projects/lhns/data/light.pn.axons.dps.rda")
+lh.splits = c(almost.lh.splits,lhon.splits,lhln.splits,lhin.splits)
 
 # Load some functions we might need
 source("helper.R")
 
 # Set colours
 united.orange = "#E64A1E"
-darjeeling = colorRampPalette(wes_palette("Darjeeling1"))
+darjeeling = colorRampPalette(wesanderson::wes_palette("Darjeeling1"))
+zissou = colorRampPalette(rev(wesanderson::wes_palette("Zissou1")))
 newFCWBNP.surf = nat.flybrains::FCWBNP.surf
 newFCWBNP.surf$RegionColourList[grep("LH_R",FCWBNP.surf$RegionList)] = united.orange
 
 # Set up an all.neurons object that will contain all the neurons destined for plotting
-most.lhns.clean = subset(lhns::most.lhns,good.trace==TRUE) # Remove neurons that look like mistakes
-lh.splits.clean = lhns::lh.splits
-lh.splits.clean[,"skeleton.type"] = "ConfocalStack"
-all.neurons = c(most.lhns.clean,lh.splits.clean)
+most.lhns = subset(most.lhns,good.trace==TRUE) # Remove neurons that look like mistakes
+most.lhins[,"id"] = most.lhins.dps[,"id"] = names(most.lhins)
+most.lhins[,"cell.type"] = most.lhins.dps[,"cell.type"] = paste0(most.lhins[,"anatomy.group"],ifelse(is.na(most.lhins[,"glomerulus"]),"",paste0("_",most.lhins[,"glomerulus"])))
+mbons.light.dps[,"cell.type"] = mbons.light.dps[,"fname"] 
+mbons.light.dps[,"anatomy.group"] = mbons.light.dps[,"cluster"] 
+mbons.light.dps[,"neurotransmitter"] = mbons.light.dps[,"transmitter"] 
+light.pn.axons[,"cell.type"] = light.pn.axons.dps[,"cell.type"] = light.pn.axons[,"GlomType"]
+light.pn.axons[,"anatomy.group"] = light.pn.axons.dps[,"anatomy.group"] = paste0("AL_",light.pn.axons[,"tract"])
+
+# Construct all neurons object
+all.neurons = c(most.lhns,most.lhins,lh.splits,mbons.light.dps,emlhns,light.pn.axons)
+all.neurons[,"id"] = names(all.neurons)
+all.neurons.dps = c(most.lhns.dps,most.lhins.dps,lh.splits,mbons.light.dps,emlhns.dps,light.pn.axons.dps)
+all.neurons.dps[,"id"] = names(all.neurons.dps)
+
+# Sort out meta data and remove NAs to be blanks
 df = all.neurons[,]
 df = df[,c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "neurotransmitter","skeleton.type")]
 colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type")
 df[is.na(df)] = " "
 attr(all.neurons,"df") = df
+
+# Sort out meta data and remove NAs to be blanks
+df = all.neurons.dps[,]
+df = df[,c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "neurotransmitter","skeleton.type")]
+colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type")
+df[is.na(df)] = " "
+attr(all.neurons.dps,"df") = df
+
+# Set starting colours
 all.neurons[,"colour"] = sample(darjeeling(length(all.neurons)))
+all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
 
 # get dye filled skeletons that will have E-Phys data
 dye.fills = all.neurons[grepl("^1",names(most.lhns))]
 cells = paste0("nm20",names(dye.fills))
 cells = cells[cells%in%names(physplitdata::smSpikes)]
 dye.fills = dye.fills[cells%in%names(physplitdata::smSpikes)] # Final list of neurons for which there is e-phy data
-
-# Get the main dotprops object
-most.lhns.dps.clean = subset(lhns::most.lhns.dps,good.trace==TRUE) # Remove neurons that look like mistakes
-all.neurons.dps = c(most.lhns.dps.clean, lh.splits.clean)
-df = all.neurons.dps[,]
-df = df[,c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "neurotransmitter","skeleton.type")]
-colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type")
-df[is.na(df)] = " "
-attr(all.neurons.dps,"df") = df
-all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
 
 # Get the E-Phys data
 ephys.lhns = physplit.analysis::create_raw_summary_array(x = physplitdata::smSpikes, cells = cells)
@@ -99,5 +131,9 @@ vfb_annotations <- read.table("data/annotation_map.tsv", header=TRUE, sep="\t", 
 
 # Get the GMR line URLs
 gmr_stack_urls=readRDS('data/gmr_stack_urls.rds')
+
+# All by all NBLast matrix for the library
+allbyall = readRDS("data/lhnblastallbyall.rds")
+
 
 

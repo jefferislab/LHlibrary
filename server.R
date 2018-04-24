@@ -18,12 +18,13 @@ shinyServer(function(input, output, session) {
   vals <- reactiveValues()
   vals$zoom = 0.4 # Zoom onto brain
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
-  vals$neurons <- subset(all.neurons,cell.type=="pd2a1")
+  vals$neurons <- subset(all.neurons,cell.type=="pd2a1"&skeleton.type=="FlyCircuit")
   vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="pd2a1")[,selected_columns])
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
+  vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
 
   # Dynamically create neurons and neuronsDF object
-  observeEvent(input$plotneurons, {
+  observeEvent(input$Append, {
     original = vals$neurons
     # Add neurons
     selected = get_neurons(input=input,db=all.neurons)
@@ -41,39 +42,90 @@ shinyServer(function(input, output, session) {
   
   # Dynamically update LHN selection, depending on which data type is picked 
   output$LHNselection <- renderUI({
-    if(input$Type%in%c("ON","LN","LHN")){
-      LHN_choices =  sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType)[,"cell.type"]))
-      selectInput("lhns", label = paste0("Cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = "pd2a1", multiple=TRUE, selectize=TRUE)
+    if(input$Type%in%c("ON","LN","IN","MBON","LHN")){
+      LHN_choices =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
+      selectInput("lhns", label = paste0("Cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
   
   # Dynamically update PNT selection, depending on which data type is picked 
   output$PNTselection <- renderUI({
-    if(input$Type%in%c("ON","LN","LHN")){
-      PNT_all =  sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType)[,"pnt"]))
+    if(is_lhn_type(input$Type)){
+      PNT_all =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
       PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^ad",PNT_all)],`Anterior ventral`=PNT_all[grepl("^av",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pd",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pv",PNT_all)])
       PNT_choices = c(PNT_choices, list(`Other`= c(PNT_all[!PNT_all%in%unlist(PNT_choices)])))
-      selectInput("PNT", label = paste0("Primary neurite tracts in dataset (",length(PNT_choices),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
+      selectInput("PNT", label = paste0("Primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
   
   # Dynamically update AG selection, depending on which PNTs are picked 
   output$AGselection <- renderUI({
-    if(input$Type%in%c("ON","LN","LHN")){
-      AG_choices =  sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType)[,"anatomy.group"]))
+    if(is_lhn_type(input$Type)){
+      AG_choices =  sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"anatomy.group"]))
       selectInput("AG", label = paste0("Anatomy groups (",length(AG_choices),") :"), choices = c("all in selected primary neurite tracts",AG_choices),selected = "all in selected primary neurite tracts", multiple=TRUE, selectize=TRUE)
     }
   })
   
   # Dynamically update CT selection, depending on which PNTs and AGs are picked 
   output$CTselection <- renderUI({
-    if(input$Type%in%c("ON","LN","LHN")){
+    if(is_lhn_type(input$Type)){
       if("all in selected primary neurite tracts"%in%input$AG){
-        CT_choices = sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
+        CT_choices = sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
       }else{
         CT_choices = sort(unique(subset(all.neurons[,],anatomy.group%in%input$AG&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
       }
       selectInput("CT", label = paste0("Cell types (",length(CT_choices),") :"), choices = c("all in selected anatomy groups",CT_choices), selected = "all in selected anatomy groups", multiple=TRUE, selectize=TRUE)
+    }
+  })
+  
+  # MBON selection
+  output$MBONselection <- renderUI({
+    if(!is_lhn_type(input$Type)){
+      if(grepl("MBON",input$Type)){
+        MBON_choices = sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("MBON",type))[,"cell.type"]))
+        selectInput("MBON", label = paste0("MBON types (",length(MBON_choices),") :"), choices = MBON_choices, selected = MBON_choices[1], multiple=TRUE, selectize=TRUE)
+      }
+    }
+  })
+  
+  
+  # PN types selection
+  output$PNtype <- renderUI({
+    if(!is_lhn_type(input$Type)){
+      if(grepl("IN",input$Type)){
+        input_all = sort(as.character(sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type))[,"anatomy.group"]))))
+        input_choices = list(`medial antennal lobe tract (mALT)`= input_all[grepl("AL-mALT",input_all )], 
+                             `mediolateral antennal lobe tract (mlALT)`= input_all[grepl("AL-mlALT",input_all )],
+                             `lateral antennal lobe tract (lALT)`= input_all[grepl("AL-lALT",input_all )],
+                             `transverse antennal lobe tract`= input_all[grepl("AL-t",input_all )],
+                             `Putative gustatory projections`= input_all[grepl("GNG|mAL-PN|SOG",input_all )],
+                             `Putative mechanosensory projections`= input_all[grepl("WED",input_all)],
+                             `Centrifgual projections`= input_all[grepl("Centrifugal",input_all )],
+                             `Visual projections`= input_all[grepl("LO",input_all )],
+                             `Other`= input_all[grepl("notLHproper|Expansive",input_all )])
+        input_choices = input_choices[sapply(input_choices,length)>1] # get rid of empty fields
+        selectInput("PNtype", label = paste0("Projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
+      }
+    }
+  })
+  
+  # PN selection
+  output$PNselection <- renderUI({
+    if(!is_lhn_type(input$Type)){
+      if(grepl("IN",input$Type)){
+        input_all = sort(as.character(sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type)&anatomy.group%in%input$PNtype)[,"cell.type"]))))
+        input_choices = list(`medial antennal lobe tract (mALT)`= input_all[grepl("AL-mALT",input_all )], 
+                             `mediolateral antennal lobe tract (mlALT)`= input_all[grepl("AL-mlALT",input_all )],
+                             `lateral antennal lobe tract (lALT)`= input_all[grepl("AL-lALT",input_all )],
+                             `transverse antennal lobe tract`= input_all[grepl("AL-t",input_all )],
+                             `Putative gustatory projections`= input_all[grepl("GNG|mAL-PN|SOG",input_all )],
+                             `Putative mechanosensory projections`= input_all[grepl("WED",input_all)],
+                             `Centrifgual projections`= input_all[grepl("Centrifugal",input_all )],
+                             `Visual projections`= input_all[grepl("LO",input_all )],
+                             `Other`= input_all[grepl("notLHproper|Expansive",input_all )])
+        input_choices = input_choices[sapply(input_choices,length)>1] # get rid of empty fields
+        selectInput("PN", label = paste0("Projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
+      }
     }
   })
   
@@ -649,6 +701,7 @@ shinyServer(function(input, output, session) {
           tdf[,"skeleton.type"] = input$TracingType
           tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
           attr(tracing_neurons,"df") = tdf # Attach meta data 
+          names(tracing_neurons) = tdf[,"id"] # Make sure names are same as ID
         }
       }else{ # Add user uploaded file
         template_brain <- input$TracingBrain
@@ -680,6 +733,7 @@ shinyServer(function(input, output, session) {
         }else{
           tdf[,"id"] = rownames(tdf) = names(tracing_neurons)  
         }
+        names(tracing_neurons) = tdf[,"id"]
         tdf[,"skeleton.type"] = input$TracingType
         tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
         attr(tracing_neurons,"df") = tdf # Attach meta data
@@ -722,109 +776,318 @@ shinyServer(function(input, output, session) {
         selectInput("UploadedSkeletons", label = paste0("uploaded neurons (",length(uploaded.neurons),") :"), choices = Upload_choices,selected = Upload_choices[1], multiple=TRUE, selectize=TRUE)
     }
   })
-
-  # Get tracing to NBLAST
-  tracings <- reactive({
-    nat::dotprops(vals$neurons[input$UploadedSkeletons])
+  
+  # If choosing from library, select what data type first
+  output$NBLAST_SkeletonType <- renderUI({
+    if(input$QueryType=="Library"){
+      selectInput(inputId='NBLAST_SkeletonType', label='dataset:', choices = sort(unique(all.neurons[,"skeleton.type"])), selected = "FlyCircuit", multiple=FALSE, selectize=TRUE)
+    }
+  })
+  
+  output$NBLAST_ChooseFromLibrary <- renderUI({
+    if(input$QueryType=="Library"){
+      possible = subset(vals$neurons,skeleton.type%in%input$NBLAST_SkeletonType)
+      library_choices = unique(sort(possible[,"cell.type"]))
+      selectInput(inputId='NBLAST_ChooseFromLibrary', label=paste0('selected cell types (',length(library_choices),') :'), choices = library_choices, selected = NULL, multiple=FALSE, selectize=TRUE)
+    }
+  })
+  
+  output$NBLAST_ChooseID <- renderUI({
+    if(input$QueryType=="Library"){
+      possible = subset(vals$neurons,skeleton.type%in%input$NBLAST_SkeletonType&cell.type%in%input$NBLAST_ChooseFromLibrary)
+      skel_choices = subset(vals$neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
+      selectInput(inputId='NBLAST_ChooseID', label=paste0('individual neurons (',length(skel_choices),') :'), choices = skel_choices, selected = skel_choices[1], multiple=TRUE, selectize=TRUE)
+    }
   })
 
-  # Get the NBLAST tracing scores for the uploaded object
-  tracing_nblast_scores <- reactive({
-    query_neurons <- vals$neurons[input$UploadedSkeletons]
-    query_neurons.dps = nat::dotprops(query_neurons)
-    if(is.null(query_neurons)) {return(NULL)}
-    scores <- list()
-    shiny::withProgress(min=1, max=10, message="NBLAST in progress", expr={ # NBLAST progress bar
-      for(i in 1:10) {
-          chunk <- split(1:length(all.neurons.dps), cut(1:length(all.neurons.dps), 10))[[i]]
-          if(input$UseMean) {
-            if(length(query_neurons.dps)>1){
-              mean.score <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE) + t(nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE))) / 2
-              mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
-              scores[[i]] <- mean.score
-            }else{
-              scores[[i]] <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE) + nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE)) / 2
-            }
-          } else {
-            if(length(query_neurons.dps)>1){
-              mean.score <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk])
-              mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
-              scores[[i]] <- mean.score
-            }else{
-              scores[[i]] <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk])
-            }
+  # Get tracing and perform NBLAST
+  observeEvent(input$NBLASTGO, {
+    if(input$QueryType=="UserUpload"){
+      if(input$UploadedSkeletons!="no user uploaded neurons"){
+        vals$NBLAST$tracings =  nat::dotprops(vals$neurons[input$UploadedSkeletons])
+      }else{
+        vals$NBLAST$tracings = NULL
+      }  
+      # Get the NBLAST tracing scores for the uploaded object
+      isolate({ 
+        query_neurons.dps <- vals$NBLAST$tracings
+        if(is.null(query_neurons.dps)) {return(NULL)}
+        scores <- list()
+        shiny::withProgress(min=1, max=10, message="NBLAST in progress", expr={ # NBLAST progress bar
+        for(i in 1:10) {
+              chunk <- split(1:length(all.neurons.dps), cut(1:length(all.neurons.dps), 10))[[i]]
+              if(input$UseMean) {
+                if(length(query_neurons.dps)>1){
+                  mean.score <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + t(nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE,UseAlpha = TRUE))) / 2
+                  mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
+                  scores[[i]] <- mean.score
+                }else{
+                  scores[[i]] <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE)) / 2
+                }
+              } else {
+                if(length(query_neurons.dps)>1){
+                  mean.score <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
+                  mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
+                  scores[[i]] <- mean.score
+                }else{
+                  scores[[i]] <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
+                }
+              }
+              shiny::setProgress(value=i)
           }
-          shiny::setProgress(value=i)
+        })
+      })
+      scores = base::unlist(scores,use.names = TRUE) # Unlist, preserve names
+      names(scores) = names(all.neurons.dps) # Hmm, make sure names are preserved
+    }else if (input$QueryType=="Library") { # Search through pre-calculated scores
+      vals$NBLAST$tracings = vals$neurons[input$NBLAST_ChooseID]
+      if(length(input$NBLAST_ChooseID)>1){
+        scores = colSums(allbyall[input$NBLAST_ChooseID,])
+        scores.reverse = colSums(allbyall[input$NBLAST_ChooseID,])
+      }else{
+        scores = allbyall[input$NBLAST_ChooseID,]
+        scores.reverse = allbyall[input$NBLAST_ChooseID,]
       }
-    })
-    scores = base::unlist(scores,use.names = TRUE) # Unlist, preserve names
-    names(scores) = names(all.neurons.dps) # Hmm, make sure names are preserved
-    scores
+      if(input$UseMean){
+        scores = (scores + scores.reverse) / 2
+      }
+      names(scores) = colnames(allbyall)
+      scores = scores[!names(scores)%in%input$NBLAST_ChooseID] # Remove self-match
+    }
+    scores <- sort(scores, decreasing=TRUE)
+    vals$NBLAST$result = scores
+    # Get, order and colour the NBLAST matches
+    matches = all.neurons[names(vals$NBLAST$result)[1:as.numeric(input$NumHits)]]
+    matches[,"colour"] = zissou(length(matches))
+    vals$NBLAST$matches = matches
+    # Create data frame for selection table
+    matchesDF = matches[,]
+    matchesDF[,"nblast.score"] = signif(vals$NBLAST$result[1:as.numeric(input$NumHits)],digits = 3)
+    matchesDF = matchesDF[,c("id","nblast.score","cell.type","transmitter","skeleton.type","colour")]
+    vals$NBLAST$matchesDF = matchesDF
   })
 
   # Plot the tracing scores result
-  output$tracing_nblast_results_plot <- renderPlot({
-    scores <- tracing_nblast_scores() # Get the reactive tracing_nblast_scores object
-    if(is.null(scores)) return(NULL)
+  output$NBLAST_results_plot <- renderPlot({
+    scores <- vals$NBLAST$result # Get the reactive tracing_nblast_scores object
+    if(is.null(scores)) {return(NULL)}
     nblast_results <- base::data.frame(scores=scores)
     p <- ggplot2::ggplot(nblast_results, aes(x=scores)) + ggplot2::geom_histogram(binwidth=diff(range(nblast_results$scores))/100) + xlab("NBLAST score") + ylab("Frequency density") + geom_vline(xintercept=0, colour='red')
     p
   })
 
-  # Visualise the NBLAST results
-  output$tracing_nblast_results_viewer <- renderText({
-    scores <- tracing_nblast_scores()
-    if(is.null(scores)) return(NULL)
-    top10 <- sort(scores, decreasing=TRUE)[1:10]
-    top10n <- names(top10)
-    vfb_link(top10n)
-  })
-
-  output$tracing_nblast_results_top10 <- renderTable({
-    query_neuron <- tracing()
-    scores <- tracing_nblast_scores()
-    if(is.null(scores)) return(NULL)
-    names(scores) <- fc_neuron(names(scores))
-    data.frame(scores=sort(scores, decreasing=TRUE)[1:10],normalised_scores=sort(scores/nblast(dotprops(query_neuron), dotprops(query_neuron)), decreasing=TRUE)[1:10], flycircuit=sapply(names(sort(scores, decreasing=TRUE)[1:10]), flycircuit_link), vfb=sapply(names(sort(scores, decreasing=TRUE)[1:10]), vfb_link), cluster=sapply(names(sort(scores, decreasing=TRUE)[1:10]), cluster_link), type=sapply(names(sort(scores, decreasing=TRUE)[1:10]), function(x) link_for_neuron_type(type_for_neuron(x))))
-  }, sanitize.text.function = force)
-
-  output$tracing_nblast_results_download <- downloadHandler(
+  # Download the NBLAST results
+  output$NBLAST_results_download <- downloadHandler(
     filename = function() {  paste0(input$.tracing_file$name, '_nblast_results_', Sys.Date(), '.csv') },
     content = function(file) {
-      scores <- tracing_nblast_scores()
-      score_table <- data.frame(neuron=names(scores), raw=scores, norm=scores/nblast(dotprops(tracing()), dotprops(tracing())), type=sapply(names(scores), function(x) paste0(type_for_neuron(x), collapse=", ")))
+      scores <- vals$NBLAST$result # the norm isn't correct here, sicne we normalised earlier?
+      score_table <- data.frame(neuron=names(scores), raw=scores, norm=scores/nblast(vals$NBLAST$tracings, vals$NBLAST$tracings), type=sapply(names(scores), function(x) paste0(type_for_neuron(x), collapse=", ")))
       colnames(score_table) <- c("Neuron", "Raw NBLAST score", "Normalised NBLAST score", "Type")
       write.csv(score_table, file, row.names=FALSE)
     }
   )
 
+  # Announce when the NBLAST is complete
   output$tracing_nblast_complete <- reactive({
-    scores <- tracing_nblast_scores()
+    scores <- vals$NBLAST$result
     return(ifelse(is.null(scores), FALSE, TRUE))
   })
   outputOptions(output, 'tracing_nblast_complete', suspendWhenHidden=FALSE)
 
-  output$view3d_tracing <- renderRglwidget({
-    clear3d()
-    query_neuron <- tracing()
-    if(!is.null(query_neuron)) {
-      plot3d(query_neuron, col='black', lwd=2, soma=TRUE)
-      scores <- tracing_nblast_scores()
+  # Plot NBLAST results
+  output$NBLAST_View3D <- renderRglwidget({
+    rgl::clear3d()
+    rgl::plot3d(FCWB)
+    query_neurons <- vals$NBLAST$tracings
+    query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.5)
+    if(!is.null(query_neurons)) {
+      plot3d(query_neurons, col=query_neurons[,"colour"], lwd=3, soma=TRUE)
+      scores <- vals$NBLAST$result
       scores <- sort(scores, decreasing=TRUE)
-      plot3d(dps[names(scores)[1:10]], soma=TRUE)
+      top.matches <- vals$NBLAST$matches
+      if(!is.null(input$NBLAST_SelectionTable_rows_selected)){ # Don't show neurons highlighted in selection table
+        top.matches = top.matches[-input$NBLAST_SelectionTable_rows_selected]
+      }
+      plot3d(top.matches,col = top.matches[,"colour"],lwd = 2, soma=TRUE)
     }
-    plot3d(FCWB)
     frontalView()
     rglwidget()
   })
 
+  
+  ########################
+  # NBLAST Selection Table #
+  ########################
+  
+  # Show neuron selection table with some table-wide buttons above it
+  output$NBLAST_MainTable<-renderUI({
+    shiny::fluidPage(
+      box(width=12,
+          column(6,offset = 0,
+                 HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
+                 actionButton(inputId = "NBLAST_Del_row_head",label = "delete selected"),
+                 actionButton(inputId = "NBLAST_Col_row_head",label = "recolour selected"),
+                 HTML('</div>')
+          ),
+          shiny::column(width = 12, 
+                        DT::dataTableOutput("NBLAST_SelectionTable") 
+          ),
+          tags$script(HTML('$(document).on("click", "input", function () {
+                           var checkboxes = document.getElementsByName("row_selected");
+                           var checkboxesChecked = [];
+                           for (var i=0; i<checkboxes.length; i++) {
+                           if (checkboxes[i].checked) {
+                           checkboxesChecked.push(checkboxes[i].value);
+                           }
+                           } 
+                           Shiny.onInputChange("NBLAST_checked_rows",checkboxesChecked);})'
+          )),# This HTML code assigns input$NBLAST_checked_rows, so we know which rows in the table are checked
+          tags$script("$(document).on('click', '#NBLAST_SelectionTable button', function () {
+                      Shiny.onInputChange('NBLAST_lastClickId',this.id);
+                      Shiny.onInputChange('NBLAST_lastClick', Math.random())});"
+          ) # When a button in output$NBLAST_SelectionTable is clicked, input$NBLAST_lastClickId gets assigned the id of this button and input$NBLAST_lastClick gets assigned a random value
+          # The last click is used to detect the click (for instance when a button is clicked twice, the id won’t change and hence cannot be observed)
+      )
+      )
+    })
+  
+  # Render neuron selection table
+  output$NBLAST_SelectionTable <- DT::renderDataTable({
+    DT=vals$NBLAST$matchesDF
+    # If there's stuff in the table...
+    if(length(DT)>0){
+      # Add check boxes to the table
+      DT[["Select"]]<-paste0('<input type="checkbox" name="row_selected" value="Row',1:nrow(vals$NBLAST$matchesDF),'"><br>')
+      # Add two action buttons to the table
+      DT[["Actions"]]<-paste0('
+                              <div class="btn-group" role="group" aria-label="Basic example">
+                              <button type="button" class="btn btn-secondary modify" id=modify_',1:nrow(vals$NBLAST$matchesDF),'>recolour</button> 
+                              <button type="button" class="btn btn-secondary delete" id=delete_',1:nrow(vals$NBLAST$matchesDF),'><i class="fa fa-trash"></i></button>
+                              </div>
+                              ')
+      DT::datatable(DT,  escape=F, options = list(paging=FALSE),extensions = c('Responsive'), editable = FALSE, rownames= FALSE) %>%
+        DT::formatStyle('cell.type', target = "row", backgroundColor = "lightgrey",color = 'black') %>%
+        DT::formatStyle('colour', backgroundColor = DT::styleEqual(DT$colour,DT$colour))
+      # Using escape = F means that using it, datatable will render the buttons according to their HTML codes instead of strings
+    }else{
+      NULL
+    }
+  })
+  
+  # Delete rows that have been checked
+  observeEvent(input$NBLAST_Del_row_head,{
+    row_to_del=as.numeric(gsub("Row","",input$NBLAST_checked_rows))
+    vals$NBLAST$matchesDF = vals$NBLAST$matchesDF[-row_to_del] # Update dynamic object
+    vals$NBLAST$matches = vals$NBLAST$matches[-row_to_del] # Update dynamic object
+  })
+  
+  ##############################
+  # Modify NBLAST Colours Table #
+  #############################
+  
+  # Delete rows that have been checked
+  observeEvent(input$NBLAST_Col_row_head,{
+    showModal(NBLAST_modal_recolor_multiple)
+  })
+  
+  # Observe input$NBLAST_lastClick and then act to delete or modify a row
+  observeEvent(input$NBLAST_lastClick,
+               {
+                 if (input$NBLAST_lastClickId%like%"delete") # Was is the delete button?
+                 {
+                   row_to_del=as.numeric(gsub("delete_","",input$NBLAST_lastClickId))
+                   vals$NBLAST$matchesDF = vals$NBLAST$matchesDF[-row_to_del] # Remove from data table
+                   vals$NBLAST$matches = vals$NBLAST$matches[-row_to_del] # Remove from selected neurons
+                 }
+                 else if (input$NBLAST_lastClickId%like%"modify") # Or was it the modify button?
+                 {
+                   showModal(NBLAST_modal_modify)
+                 }
+               }
+  )
+  
+  # Modify colour
+  NBLAST_modal_modify<-modalDialog(
+    fluidPage(
+      h3(strong("select a colour"),align="center"),
+      uiOutput("NBLAST_OldColour"),
+      actionButton("NBLAST_ChangeColour","change")
+    )
+  )
+  
+  # Modify colours
+  NBLAST_modal_recolor_multiple <-modalDialog(
+    fluidPage(
+      h3(strong("select a colour"),align="center"),
+      uiOutput("NBLAST_RandomStartColour"),
+      actionButton("NBLAST_ChangeColourMultiple","change")
+    )
+  )
+  
+  # Render old neuron colour and select new one in modal window
+  output$NBLAST_OldColour <- renderUI({
+    selected_row=as.numeric(gsub("modify_","",input$NBLAST_lastClickId))
+    old_row=vals$NBLAST$matchesDF[selected_row,"colour"][[1]]
+    if(length(old_row)>1){old_row=united.orange}
+    colourInput(inputId = "NBLAST_NewColour",label= NULL,value = old_row)
+  })
+  
+  # Render old neuron colour and select new one in modal window
+  output$NBLAST_RandomStartColour <- renderUI({
+    colourInput(inputId = "NBLAST_NewColourMultiple",label= NULL,value = sample(darjeeling(100),1))
+  })
+  
+  # Update colour on the data frame and in neurons
+  observeEvent(input$NBLAST_ChangeColour,{
+    selected_row = as.numeric(gsub("modify_","",input$NBLAST_lastClickId))
+    vals$NBLAST$matches[selected_row,"colour"] <- input$NBLAST_NewColour
+    vals$NBLAST$matchesDF[selected_row,"colour"] <- input$NBLAST_NewColour
+  })
+  
+  # Update colour on the data frame and in neurons
+  observeEvent(input$NBLAST_ChangeColourMultiple,{
+    selected_row = as.numeric(gsub("Row","",input$NBLAST_checked_rows))
+    vals$NBLAST$matches[selected_row,"colour"] <- input$NBLAST_NewColourMultiple
+    vals$NBLAST$matchesDF[selected_row,"colour"] <- input$NBLAST_NewColourMultiple
+  })
+  
+  ###########################
+  # Show Maximal Projections #
+  ##########################
+  
+  output$LineCTs <- renderUI({
+    cts = as.character(sort(unique(vals$neurons[,"cell.type"])))
+    cts = cts[cts!="notLHproper"]
+    cts_in_lines = as.character(sort(unique(lh.splits[,"cell.type"])))
+    chosen_in_lines = cts[cts%in%cts_in_lines]
+    cts_in_lines = cts_in_lines[!cts_in_lines%in%cts]
+    cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
+    cts_choices = cts_choices[sapply(cts_choices,length)>1] # get rid of empty fields
+    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2017 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = cts_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
+  })
+  
+  output$LineCode <- renderUI({
+    lines = sort(unique(as.character(subset(lh.splits,cell.type%in%input$LineCodeCTs)[,"linecode"])))
+    if(!is.null(lines)&length(lines)>0){
+      selectInput("LineCode", label = paste0("Split lines (",length(lines),") :"), choices = lines, selected = lines[1], multiple=FALSE, selectize=TRUE,  width = 500)
+    }
+  })
+     
+  output$MaximalProjection <- renderImage({
+    image_file <- paste("www/maxprojections/","example",".png",sep="")
+    return(list(
+      src = image_file,
+      filetype = "image/jpeg",width = 400, height = 300
+    ))
+  }, deleteFile = FALSE)
+  
   #########
   # TEST #
   #########
   
   output$Test = renderPrint({
     #str(vals$CATMAID)
-    s =  length(vals$neuronsDF)
+    s =  is_lhn_type(input$Type)
     # if(length(s)>0){
     #   s = update_neurons(input=input,db=s)
     # }
