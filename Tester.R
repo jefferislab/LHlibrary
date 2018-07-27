@@ -18,15 +18,15 @@ server <- function(input, output) {
           h3(strong("Actions on datatable with buttons"),align="center"),
           hr(),
           column(6,offset = 6,
-                 HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
+                 shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                  actionButton(inputId = "Add_row_head",label = "Add a new row"),
                  actionButton(inputId = "Del_row_head",label = "Delete selected rows"),
                  actionButton(inputId = "Compare_row_head",label = "Compare selected rows"),
-                 HTML('</div>')
+                 shiny::HTML('</div>')
           ),
           
           column(12,dataTableOutput("Main_table")),
-          tags$script(HTML('$(document).on("click", "input", function () {
+          tags$script(shiny::HTML('$(document).on("click", "input", function () {
                            var checkboxes = document.getElementsByName("row_selected");
                            var checkboxesChecked = [];
                            for (var i=0; i<checkboxes.length; i++) {
@@ -114,7 +114,7 @@ server <- function(input, output) {
       dataTableOutput('row_modif'),
       actionButton("save_changes","Save changes"),
       
-      tags$script(HTML("$(document).on('click', '#save_changes', function () {
+      tags$script(shiny::HTML("$(document).on('click', '#save_changes', function () {
                        var list_value=[]
                        for (i = 0; i < $( '.new_input' ).length; i++)
                        {

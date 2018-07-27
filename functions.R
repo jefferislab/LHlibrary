@@ -1,14 +1,16 @@
-# Functions for use with this R Shiny App
+#############
+# Functions #
+#############
 
-# Functions
+# labels
 label.help <- function(label,id){
-  HTML(paste0(label,actionLink(id,label=NULL,icon=icon('question-circle'))))
+  shiny::HTML(paste0(label,actionLink(id,label=NULL,icon=icon('question-circle'))))
 }
 
 # Get neurons that have been selected
 get_neurons<-function(input, db){
   if(grepl("xample",input$Type)){
-    cts = "pd2a1"
+    cts = "PD2a1"
   }else if (is_lhn_type(input$Type)){
     if(sum(grepl("all",input$CT))>0){
       if(sum(grepl("all",input$AG))>0){
@@ -54,7 +56,7 @@ frontalView<-function(zoom=0.6){
 }
 
 # Plot a selection of pnts
-plot_pnt <- function (pnts = "pd2") {
+plot_pnt <- function (pnts = "PD2") {
   plot.pnts = lhns::primary.neurite.tracts[pnts]
   rgl::plot3d(plot.pnts, soma = T, lwd = 5, col = "darkgrey",skipRedraw = TRUE)
   pxyz = t(sapply(plot.pnts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))

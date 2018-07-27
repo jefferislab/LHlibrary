@@ -1,22 +1,18 @@
 # Also set some options
 options(rgl.useNULL=TRUE)
-options(vfbr.server = 'http://www.virtualflybrain.org')
 
 # R packages we need for this lateralhorn app
 library(shiny)
-library(rglwidget)
-library(nat)
-library(nat.nblast)
-library(nat.flybrains)
-library(catnat)
+library(shinyBS)
+library(shinyURL)
+library(shinythemes)
+library(slickR)
 library(elmr)
+library(catnat)
 library(flycircuit)
 library(plotly)
 library(downloader)
 library(vfbr)
-library(shinyURL)
-library(shinythemes)
-library(shinyBS)
 library(colourpicker)
 library(formattable)
 library(packrat)
@@ -24,49 +20,39 @@ library(lhns)
 library(wesanderson)
 library(data.table)
 library(ggplot2)
-
-
-# Quick fix while lhns is not working
-load("/Users/abates/projects/lhns/data/almost.lh.splits.rda")
-load("/Users/abates/projects/lhns/data/lhon.splits.rda")
-load("/Users/abates/projects/lhns/data/lhin.splits.rda")
-load("/Users/abates/projects/lhns/data/lhln.splits.rda")
-load("/Users/abates/projects/lhns/data/most.lhns.rda")
-load("/Users/abates/projects/lhns/data/most.lhns.dps.rda")
-load("/Users/abates/projects/lhns/data/most.lhins.rda")
-load("/Users/abates/projects/lhns/data/most.lhins.dps.rda")
-load("/Users/abates/projects/lhns/data/emlhns.rda")
-load("/Users/abates/projects/lhns/data/emlhns.dps.rda")
-load("/Users/abates/projects/lhns/data/primary.neurite.tracts.rda")
-load("/Users/abates/projects/lhns/data/mbons.light.dps.rda")
-load("/Users/abates/projects/lhns/data/light.pn.axons.rda")
-load("/Users/abates/projects/lhns/data/light.pn.axons.dps.rda")
-lh.splits = c(almost.lh.splits,lhon.splits,lhln.splits,lhin.splits)
+library(physplit.analysis)
+library(physplitdata)
 
 # Load some functions we might need
 source("helper.R")
 
 # Set colours
 united.orange = "#E64A1E"
+united.light.orange = "#FFD8B2"
 darjeeling = colorRampPalette(wesanderson::wes_palette("Darjeeling1"))
 zissou = colorRampPalette(rev(wesanderson::wes_palette("Zissou1")))
 newFCWBNP.surf = nat.flybrains::FCWBNP.surf
 newFCWBNP.surf$RegionColourList[grep("LH_R",FCWBNP.surf$RegionList)] = united.orange
 
 # Set up an all.neurons object that will contain all the neurons destined for plotting
-most.lhns = subset(most.lhns,good.trace==TRUE) # Remove neurons that look like mistakes
+most.lhns = subset(lhns::most.lhns,cell.type!="notLHproper"&good.trace==TRUE)
+most.lhins = subset(lhns::most.lhins,cell.type!="notLHproper"&good.trace==TRUE)
+most.lhns.dps = subset(lhns::most.lhns.dps,cell.type!="notLHproper"&good.trace==TRUE)
+most.lhins.dps = subset(lhns::most.lhins.dps,cell.type!="notLHproper"&good.trace==TRUE)
 most.lhins[,"id"] = most.lhins.dps[,"id"] = names(most.lhins)
 most.lhins[,"cell.type"] = most.lhins.dps[,"cell.type"] = paste0(most.lhins[,"anatomy.group"],ifelse(is.na(most.lhins[,"glomerulus"]),"",paste0("_",most.lhins[,"glomerulus"])))
 mbons.light.dps[,"cell.type"] = mbons.light.dps[,"fname"] 
 mbons.light.dps[,"anatomy.group"] = mbons.light.dps[,"cluster"] 
 mbons.light.dps[,"neurotransmitter"] = mbons.light.dps[,"transmitter"] 
-light.pn.axons[,"cell.type"] = light.pn.axons.dps[,"cell.type"] = light.pn.axons[,"GlomType"]
-light.pn.axons[,"anatomy.group"] = light.pn.axons.dps[,"anatomy.group"] = paste0("AL_",light.pn.axons[,"tract"])
+pn.axons.light[,"cell.type"] = pn.axons.light[,"GlomType"]
+pn.axons.light.dps[,"cell.type"] = pn.axons.light.dps[,"GlomType"]
+pn.axons.light[,"anatomy.group"] = paste0("AL_",pn.axons.light[,"tract"])
+pn.axons.light.dps[,"anatomy.group"] = paste0("AL_",pn.axons.light.dps[,"tract"])
 
 # Construct all neurons object
-all.neurons = c(most.lhns,most.lhins,lh.splits,mbons.light.dps,emlhns,light.pn.axons)
+all.neurons = c(most.lhns,most.lhins,lh.splits.dps,mbons.light.dps,emlhns,pn.axons.light)
 all.neurons[,"id"] = names(all.neurons)
-all.neurons.dps = c(most.lhns.dps,most.lhins.dps,lh.splits,mbons.light.dps,emlhns.dps,light.pn.axons.dps)
+all.neurons.dps = c(most.lhns.dps,most.lhins.dps,lh.splits.dps,mbons.light.dps,emlhns.dps,pn.axons.light.dps)
 all.neurons.dps[,"id"] = names(all.neurons.dps)
 
 # Sort out meta data and remove NAs to be blanks
@@ -76,19 +62,12 @@ colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "tra
 df[is.na(df)] = " "
 attr(all.neurons,"df") = df
 
-# Sort out meta data and remove NAs to be blanks
-df = all.neurons.dps[,]
-df = df[,c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "neurotransmitter","skeleton.type")]
-colnames(df) = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type")
-df[is.na(df)] = " "
-attr(all.neurons.dps,"df") = df
-
 # Set starting colours
 all.neurons[,"colour"] = sample(darjeeling(length(all.neurons)))
 all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
 
 # get dye filled skeletons that will have E-Phys data
-dye.fills = all.neurons[grepl("^1",names(most.lhns))]
+dye.fills = lhns::most.lhns[grepl("^1",names(lhns::most.lhns))]
 cells = paste0("nm20",names(dye.fills))
 cells = cells[cells%in%names(physplitdata::smSpikes)]
 dye.fills = dye.fills[cells%in%names(physplitdata::smSpikes)] # Final list of neurons for which there is e-phy data
@@ -114,26 +93,51 @@ colnames(ephys.lhns.m) = c( "Mineral Oil", "trans-2-Hexenal", "Geranyl acetate",
 
 # Selected columns to display
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")
-all.lh.pnts = c("ad1", "ad2", "ad3", "ad4", "ad5", "av1", "av2", "av3", 
-"av4", "av5", "av6", "av7", "pd1", "pd2", "pd3", 
-"pd4", "pd5", "pd6", "pd7", "pv1", "pv10", "pv11", "pv2", "pv3", 
-"pv4", "pv5", "pv6", "pv7", "pv8", "pv9")
+
 
 # Data management
 pnt_all = sort(unique(all.neurons[,"pnt"]))
+pnt_all = pnt_all[pnt_all!=""&pnt_all!=" "]
 pnt_choices = list(`Anterior dorsal`=pnt_all[grepl("^ad",pnt_all)],`Anterior ventral`=pnt_all[grepl("^av",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pd",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pv",pnt_all)]) 
+pnt_choices = pnt_choices[pnt_choices!=""&pnt_choices!=" "]
+pnt_lhns = sort(names(lhns::primary.neurite.tracts))
+ag_lhns = sort(unique(all.neurons[,"anatomy.group"]))
+mod_pns = sort(unique(most.lhins[,"modality"]))
+mod_pns[mod_pns=="Olfactory+Gustatory"] = "Olfactory\\+Gustatory"
+  
+# PNT image paths
+PNT_images = paste0("RGLsnapshots/PNT/",list.files("www/RGLsnapshots/PNT"))
+AG_images =  paste0("www/RGLsnapshots/AG/",list.files("www/RGLsnapshots/AG"))
+CT_images = paste0("RGLsnapshots/CT/",list.files("www/RGLsnapshots/CT"))
+MOD_images = paste0("RGLsnapshots/PNmodality/",list.files("www/RGLsnapshots/PNmodality"))
+TRACT_images = paste0("RGLsnapshots/PNtract/",list.files("www/RGLsnapshots/PNtract"))
+PNAG_images = paste0("RGLsnapshots/PNAG/",list.files("www/RGLsnapshots/PNAG"))
+PN_images = c(MOD_images,TRACT_images,PNAG_images)
+PN_images = unlist(sapply(mod_pns,function(x) PN_images[grepl(paste0(x,"_"),PN_images)]))
+split_brain_images = paste0("maxprojections/Brain/",list.files("www/maxprojections/Brain/"))
+split_brain_images = split_brain_images[!grepl("ntitled",split_brain_images)]
+split_vnc_images = paste0("maxprojections/VNC/",list.files("www/maxprojections/VNC/"))
+split_vnc_images = split_vnc_images[!grepl("ntitled|creenshot",split_vnc_images)]
+lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
+lines = intersect(lh_line_info$linecode,lines) # Some lines are lost...
 
-# Load VFB ID lookup table
-vfb_ids=readRDS('data/vfb_ids.rds')
+# Get ready for action
+plot.new()
 
-# Load VFB annotation ID lookup table
-vfb_annotations <- read.table("data/annotation_map.tsv", header=TRUE, sep="\t", quote = "")
+############
+# Old Code #
+############
 
-# Get the GMR line URLs
-gmr_stack_urls=readRDS('data/gmr_stack_urls.rds')
-
-# All by all NBLast matrix for the library
-allbyall = readRDS("data/lhnblastallbyall.rds")
-
+#
+# options(vfbr.server = 'http://www.virtualflybrain.org')
+#
+# # Load VFB ID lookup table
+# vfb_ids=readRDS('data/vfb_ids.rds')
+# 
+# # Load VFB annotation ID lookup table
+# vfb_annotations <- read.table("data/annotation_map.tsv", header=TRUE, sep="\t", quote = "")
+# 
+# # Get the GMR line URLs
+# gmr_stack_urls=readRDS('data/gmr_stack_urls.rds')
 
 

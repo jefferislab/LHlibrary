@@ -10,6 +10,7 @@ source("functions.R")
 
 shinyServer(function(input, output, session) {
   
+  
   ###################
   # Reactive Objects #
   ###################
@@ -18,11 +19,101 @@ shinyServer(function(input, output, session) {
   vals <- reactiveValues()
   vals$zoom = 0.4 # Zoom onto brain
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
-  vals$neurons <- subset(all.neurons,cell.type=="pd2a1"&skeleton.type=="FlyCircuit")
-  vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="pd2a1")[,selected_columns])
+  vals$neurons <- subset(all.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
+  vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="PD2a1")[,selected_columns])
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
+  vals$split_brain_images_chosen = split_brain_images
+  
+  
+  ############
+  # Carousel #
+  ############
+  
+  lapply(1:length(pnt_lhns), function(i) {
+    output[[paste0("Carousel",pnt_lhns[i])]] <- renderSlickR({
+      images = AG_images[grepl(paste0(pnt_lhns[i],"[a-z]"),AG_images)]
+      slickR(obj = images,height = '100%',width='100%')
+    })
+  })
+  
+  lapply(1:length(PN_images), function(i) {
+    observeEvent(input[[PN_images[i]]], {
+      showModal(modalDialog(
+        img(src = PN_images[i],height = "470px",width="879px",align = "center")
+      ))
+    })
+  })
+    
+  
+  ###################
+  # Splitline Modal #
+  ###################
+  
+  lapply(1:length(lines), function(i) {
+    observeEvent(input[[lines[i]]], {
+      showModal(modalDialog(
+        title = lines[i],
+        tabsetPanel(type = "tabs",
+                    tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "470px",width="879px",align = "center")),
+                    tabPanel("VNC", img(src = split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)],height = "470px",width="879px",align = "center"))
+        ),
+        br(),
+        fluidRow(
+          column(3,
+                 p(strong("cell.type: "),lhns::lh_line_info[lines[i],c("cell.type")]),
+                 p(strong("type: "),lhns::lh_line_info[lines[i],c("type")])
+                 ),
+          column(3,
+                 p(strong("neurotransmitter: "),lhns::lh_line_info[lines[i],c("neurotransmitter")]),
+                 p(strong("MCFO available: "),lhns::lh_line_info[lines[i],c("MCFO")])
+          ),
+          column(3,
+                 p(strong("AD: "),lhns::lh_line_info[lines[i],c("AD")]),
+                 p(strong("DBD: "),lhns::lh_line_info[lines[i],c("DBD")])
+          ),
+          column(3,
+                 p(strong("stablestock available: "),lhns::lh_line_info[lines[i],c("stablestock")]),
+                 p(strong("VNC expression: "),lhns::lh_line_info[lines[i],c("VNC")])
+          )
+        ),
+        easyClose = TRUE
+      ))
+    })
+  })
+  
+  observeEvent({input$splittype
+               input$splitNT},{
+               vals$split_brain_images_chosen = split_brain_images
+               if(input$splittype!="all"){
+                 lines_chosen = unique(as.character(subset(lhns::lh_line_info[lines,],grepl(input$splittype,type))$linecode))
+                 vals$split_brain_images_chosen = vals$split_brain_images_chosen[as.logical(rowSums(sapply(lines_chosen,function(x) grepl(paste0(x,".jpg"),vals$split_brain_images_chosen))))]
+               }
+               if(input$splitNT!="all"){
+                 lines_chosen = unique(as.character(subset(lhns::lh_line_info[lines,],grepl(input$splitNT,neurotransmitter))$linecode))
+                 vals$split_brain_images_chosen = vals$split_brain_images_chosen[as.logical(rowSums(sapply(lines_chosen,function(x) grepl(paste0(x,".jpg"),vals$split_brain_images_chosen))))]
+               }
+  })
+  
+  output$imageGrid <- renderUI({
+    fluidRow(
+         lapply(1:length(vals$split_brain_images_chosen), function(i) {
+           column(3,
+             shiny::strong(sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i]),
+             tags$button(
+             id = sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i],
+             class = "btn action-button",
+             tags$img(src = vals$split_brain_images_chosen[i],height = "313px",width="586px")
+           ))
+         })
+    )
+  })
+  
 
+  ###############
+  # Get Neurons #
+  ###############
+  
   # Dynamically create neurons and neuronsDF object
   observeEvent(input$Append, {
     original = vals$neurons
@@ -176,17 +267,17 @@ shinyServer(function(input, output, session) {
     shiny::fluidPage(
       box(width=12,
             column(6,offset = 0,
-                   HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
+                   shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
                    actionButton(inputId = "Col_row_head",label = "recolour selected"),
                    actionButton(inputId = "Compare_row_head",label = "compare selected"),
                    actionButton(inputId = "Download",label = "download data"),
-                   HTML('</div>')
+                   shiny::HTML('</div>')
             ),
             shiny::column(width = 12, 
                    DT::dataTableOutput("SelectionTable") 
                    ),
-              tags$script(HTML('$(document).on("click", "input", function () {
+              tags$script(shiny::HTML('$(document).on("click", "input", function () {
                                var checkboxes = document.getElementsByName("row_selected");
                                var checkboxesChecked = [];
                                for (var i=0; i<checkboxes.length; i++) {
@@ -195,7 +286,7 @@ shinyServer(function(input, output, session) {
                                     }
                                } 
                              Shiny.onInputChange("checked_rows",checkboxesChecked);})'
-              )),# This HTML code assigns input$checked_rows, so we know which rows in the table are checked
+              )),# This shiny::HTML code assigns input$checked_rows, so we know which rows in the table are checked
               tags$script("$(document).on('click', '#SelectionTable button', function () {
                     Shiny.onInputChange('lastClickId',this.id);
                     Shiny.onInputChange('lastClick', Math.random())});"
@@ -249,7 +340,7 @@ shinyServer(function(input, output, session) {
   
   # Compare neurons selected in table
   compare_neurons_modal<-modalDialog(
-    h3(strong("selected neurons"),align="center"),
+    h3(shiny::strong("selected neurons"),align="center"),
     fluidPage(
       mainPanel(
       rgl::rglwidgetOutput("plot3D", width="1000px", height="1000px") # Doesn't work...
@@ -285,7 +376,7 @@ shinyServer(function(input, output, session) {
   # Modify colour
   modal_modify<-modalDialog(
     fluidPage(
-      h3(strong("select a colour"),align="center"),
+      h3(shiny::strong("select a colour"),align="center"),
       uiOutput("OldColour"),
       actionButton("ChangeColour","change")
     )
@@ -294,7 +385,7 @@ shinyServer(function(input, output, session) {
   # Modify colours
   modal_recolor_multiple <-modalDialog(
     fluidPage(
-      h3(strong("select a colour"),align="center"),
+      h3(shiny::strong("select a colour"),align="center"),
       uiOutput("RandomStartColour"),
       actionButton("ChangeColourMultiple","change")
     )
@@ -339,7 +430,7 @@ shinyServer(function(input, output, session) {
   # Download data
   modal_download <-modalDialog(
     fluidPage(
-      h3(strong("download data"),align="center"),
+      h3(shiny::strong("download data"),align="center"),
       selectInput(inputId='DownloadType', label=NULL, choices = c("neurons in table","e-phys data for relevant neurons in table"), selected = "neurons in table", multiple=FALSE, selectize=TRUE),
       downloadButton("downloadData", "download")
     )
@@ -611,10 +702,10 @@ shinyServer(function(input, output, session) {
   # Upload data
   modal_upload <-modalDialog(
     fluidPage(
-      h3(strong("upload tracing"),align="center"),
+      h3(shiny::strong("upload tracing"),align="center"),
       selectInput(inputId = 'TracingType', label = 'upload type', choices = list(`local file`="UserUpload",`CATMAID API`="CATMAID"), selected = list(`local file`="UserUpload")),
       conditionalPanel(condition = "input.TracingType == 'UserUpload'",
-        HTML("Upload a tracing (e.g. .swc or .rds file) or skeletonised neuron (e.g. .nrrd). 
+        shiny::HTML("Upload a tracing (e.g. .swc or .rds file) or skeletonised neuron (e.g. .nrrd). 
                You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
                The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer. 
                The tracing to be uploaded must be registered into a standard fly brainspace.
@@ -630,7 +721,7 @@ shinyServer(function(input, output, session) {
                     selectize = TRUE)
       ),
       conditionalPanel(condition = "input.TracingType == 'CATMAID'",
-                       HTML("Upload a synaptic-resolution tracing using the CATMAID API, based on electron microscopy data.
+                       shiny::HTML("Upload a synaptic-resolution tracing using the CATMAID API, based on electron microscopy data.
                             You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
                             The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer.
                             To do this, you will need login details to a CATMAID server for fly brain data.
@@ -842,16 +933,16 @@ shinyServer(function(input, output, session) {
     }else if (input$QueryType=="Library") { # Search through pre-calculated scores
       vals$NBLAST$tracings = vals$neurons[input$NBLAST_ChooseID]
       if(length(input$NBLAST_ChooseID)>1){
-        scores = colSums(allbyall[input$NBLAST_ChooseID,])
-        scores.reverse = colSums(allbyall[input$NBLAST_ChooseID,])
+        scores = colSums(lh_nblast[input$NBLAST_ChooseID,])
+        scores.reverse = colSums(lh_nblast[input$NBLAST_ChooseID,])
       }else{
-        scores = allbyall[input$NBLAST_ChooseID,]
-        scores.reverse = allbyall[input$NBLAST_ChooseID,]
+        scores = lh_nblast[input$NBLAST_ChooseID,]
+        scores.reverse = lh_nblast[input$NBLAST_ChooseID,]
       }
       if(input$UseMean){
         scores = (scores + scores.reverse) / 2
       }
-      names(scores) = colnames(allbyall)
+      names(scores) = colnames(lh_nblast)
       scores = scores[!names(scores)%in%input$NBLAST_ChooseID] # Remove self-match
     }
     scores <- sort(scores, decreasing=TRUE)
@@ -924,15 +1015,15 @@ shinyServer(function(input, output, session) {
     shiny::fluidPage(
       box(width=12,
           column(6,offset = 0,
-                 HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
+                 shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                  actionButton(inputId = "NBLAST_Del_row_head",label = "delete selected"),
                  actionButton(inputId = "NBLAST_Col_row_head",label = "recolour selected"),
-                 HTML('</div>')
+                 shiny::HTML('</div>')
           ),
           shiny::column(width = 12, 
                         DT::dataTableOutput("NBLAST_SelectionTable") 
           ),
-          tags$script(HTML('$(document).on("click", "input", function () {
+          tags$script(shiny::HTML('$(document).on("click", "input", function () {
                            var checkboxes = document.getElementsByName("row_selected");
                            var checkboxesChecked = [];
                            for (var i=0; i<checkboxes.length; i++) {
@@ -1009,7 +1100,7 @@ shinyServer(function(input, output, session) {
   # Modify colour
   NBLAST_modal_modify<-modalDialog(
     fluidPage(
-      h3(strong("select a colour"),align="center"),
+      h3(shiny::strong("select a colour"),align="center"),
       uiOutput("NBLAST_OldColour"),
       actionButton("NBLAST_ChangeColour","change")
     )
@@ -1018,7 +1109,7 @@ shinyServer(function(input, output, session) {
   # Modify colours
   NBLAST_modal_recolor_multiple <-modalDialog(
     fluidPage(
-      h3(strong("select a colour"),align="center"),
+      h3(shiny::strong("select a colour"),align="center"),
       uiOutput("NBLAST_RandomStartColour"),
       actionButton("NBLAST_ChangeColourMultiple","change")
     )
@@ -1056,28 +1147,37 @@ shinyServer(function(input, output, session) {
   ##########################
   
   output$LineCTs <- renderUI({
-    cts = as.character(sort(unique(vals$neurons[,"cell.type"])))
+    cts = as.character(sort(unique(vals$neurons[,"cell.type"]))) # Selected cell types
     cts = cts[cts!="notLHproper"]
-    cts_in_lines = as.character(sort(unique(lh.splits[,"cell.type"])))
-    chosen_in_lines = cts[cts%in%cts_in_lines]
+    cts_in_lines = unlist(strsplit(unique(cell_type_summary$cell.type),"/")) # All cell type in split-gAL4 lines
+    cts_in_lines = cts_in_lines[cts_in_lines!="notLHproper"]
+    chosen_in_lines = cts[cts%in%cts_in_lines]  # Selected cell types in lines
     cts_in_lines = cts_in_lines[!cts_in_lines%in%cts]
     cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
     cts_choices = cts_choices[sapply(cts_choices,length)>1] # get rid of empty fields
-    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2017 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = cts_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
+    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = cts_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })
   
   output$LineCode <- renderUI({
-    lines = sort(unique(as.character(subset(lh.splits,cell.type%in%input$LineCodeCTs)[,"linecode"])))
+    linecodes = sort(unique(as.character(subset(lh_line_info,grepl(as.character(input$LineCodeCTs),as.character(cell.type)))[,"linecode"])))
     if(!is.null(lines)&length(lines)>0){
-      selectInput("LineCode", label = paste0("Split lines (",length(lines),") :"), choices = lines, selected = lines[1], multiple=FALSE, selectize=TRUE,  width = 500)
+      selectInput("LineCode", label = paste0("Split lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
     }
   })
      
   output$MaximalProjection <- renderImage({
-    image_file <- paste("www/maxprojections/","example",".png",sep="")
+    maxprojection = split_brain_images[grepl(input$LineCode,split_brain_images)]
     return(list(
-      src = image_file,
-      filetype = "image/jpeg",width = 400, height = 300
+      src = paste0("www/",maxprojection),
+      filetype = "image/jpeg",width = "auto", height = "auto"
+    ))
+  }, deleteFile = FALSE)
+  
+  output$VNCMaximalProjection <- renderImage({
+    maxprojection = split_vnc_images[grepl(input$LineCode,split_vnc_images)]
+    return(list(
+      src = paste0("www/",maxprojection),
+      filetype = "image/jpeg",width = "auto", height = "auto"
     ))
   }, deleteFile = FALSE)
   
