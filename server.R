@@ -450,7 +450,7 @@ shinyServer(function(input, output, session) {
         downloadskeletons(vals$neurons,dir = file,subdir = pnt,format="swc",file = paste0(cell.type,"_",id),Force = TRUE)
       }else{
         cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%dye.fills])
-        csv = ephys.lhns.m[rownames(ephys.lhns.m)%in%cts,]
+        csv = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%cts,]
         write.csv(csv,file = file, row.names = TRUE)
       }
     },
@@ -471,23 +471,29 @@ shinyServer(function(input, output, session) {
       cts = sort(unique(vals$neurons[,"cell.type"]))
     }
     cts_in_data = cts[cts%in%ct_choices]
+    ct_choices = ct_choices[ct_choices%in%cts]
     selectInput("EphysSelection", label = paste0("Cell types with electrophysiological response data (",length(ct_choices),") :"), choices = ct_choices, selected = cts_in_data, multiple=TRUE, selectize=TRUE)
   })
   
   # Choose odours for which to plot cell type responses
   output$ChooseOdours <- renderUI({
-    Odour_choices = colnames(ephys.lhns.m)
+    Odour_choices = colnames(lhns::lhn_odour_responses)
     selectInput("OdourSelection", label = paste0("choose odour (",length(Odour_choices),") :"), choices = Odour_choices, selected = "Vinegar mimic", multiple=TRUE, selectize=TRUE)
   })
   
   # A plotly graph for the E-Phys data as tuning curves
   output$Ephys <- plotly::renderPlotly({
     if(is.null(input$EphysSelection)){
-      data = rep(0,ncol(ephys.lhns.m)) # ephys.lhns.m is a matrix
-      names(data) = colnames(ephys.lhns.m)
+      data = rep(0,ncol(lhns::lhn_odour_responses)) # lhns::lhn_odour_responses is a matrix
+      names(data) = colnames(lhns::lhn_odour_responses)
     }else{
-      data = ephys.lhns.m[rownames(ephys.lhns.m)%in%input$EphysSelection,]
-      data = data[order(rownames(data)),] 
+      data = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%input$EphysSelection,]
+      if(is.null(nrow(data))) { # If there is only one skeleton...
+        data = t(as.matrix(data))
+        rownames(data) = input$EphysSelection
+      }else{
+        data = data[order(rownames(data)),]
+      }
     }
     if(input$CTmean){ # Take cell type mean
       if(!is.null(nrow(data))){
@@ -585,10 +591,10 @@ shinyServer(function(input, output, session) {
   # A plotly graph for the E-Phys data as tuning curves
   output$OdoursResponses <- plotly::renderPlotly({
     if(is.null(input$OdourSelection)){ # If no odours are selected
-      data = t(as.matrix(rep(0,nrow(ephys.lhns.m))))
-      colnames(data) = rownames(ephys.lhns.m)
+      data = t(as.matrix(rep(0,nrow(lhns::lhn_odour_responses))))
+      colnames(data) = rownames(lhns::lhn_odour_responses)
     }else{ # A set of multiple odours
-      data = t(ephys.lhns.m[,colnames(ephys.lhns.m)%in%input$OdourSelection])
+      data = t(lhns::lhn_odour_responses[,colnames(lhns::lhn_odour_responses)%in%input$OdourSelection])
     }
     if(input$OdourMean){ # Take odours' mean
       if(!is.null(nrow(data))){
@@ -1154,8 +1160,8 @@ shinyServer(function(input, output, session) {
     chosen_in_lines = cts[cts%in%cts_in_lines]  # Selected cell types in lines
     cts_in_lines = cts_in_lines[!cts_in_lines%in%cts]
     cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
-    cts_choices = cts_choices[sapply(cts_choices,length)>1] # get rid of empty fields
-    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = cts_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
+    cts_choices = cts_choices[sapply(cts_choices,length)>0] # get rid of empty fields
+    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })
   
   output$LineCode <- renderUI({

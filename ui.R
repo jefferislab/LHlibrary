@@ -93,7 +93,7 @@ shinyUI(navbarPage("LH Library", id="tab", fluid = TRUE,
   # View LHN library #
   ###################
 
-tabPanel("3D Viewer",
+tabPanel("Data Viewer",
           includeCSS("errors.css"),
           shinyURL.ui(display=F),
           sidebarLayout(
@@ -196,54 +196,54 @@ tabPanel("3D Viewer",
        )
     ),
 # 
-# ###################
+#####################
 # # NBLast neurons #
-# ###################
-# 
-# tabPanel("NBLAST",
-#          sidebarLayout(
-#            sidebarPanel(
-#              h2("NBLAST Against the LH Library"),
-#              shiny::HTML("Want to know what cell type your neuron belongs to? Or find a genetic line for it? 
-#                   Choose a neuron from out library or a neuron you have uploaded and blast it against our library.
-#                   If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
-#                   rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b>
-#                   in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: #F21A00;'>red = best</span> to <span style='color: #3B9AB2;'>cyan = worst</span>)."),
-#              shiny::HTML("See what the scores mean <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>here</a>"),
-#              hr(),
-#              strong("To NBLAST neurons they must be in the neuron selection table, in the Explore tab"),
-#              hr(),
-#              selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
-#              uiOutput("ChooseUploadedSkeletons"),
-#              uiOutput("NBLAST_SkeletonType"),
-#              uiOutput("NBLAST_ChooseFromLibrary"),
-#              uiOutput("NBLAST_ChooseID"),
-#              shiny::HTML("<i>If multiple neurons are chosen, NBLAST scores will be averaged across these neurons. I.e. they will be treated as one amalgamated neuron</i><br /><br />"),
-#              sliderInput(inputId = "NumHits",label = "no. hits to visualise:", 1, 100, 10, 1),
-#              checkboxInput("UseMean", label="Use mean scores", value= TRUE),
-#              shiny::HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
-#                   This is particularly useful for clustering neurons into types, rather than,
-#                   for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
-#              actionButton("NBLASTGO","NBLAST")
-#              ),
-#          mainPanel(
-#            h2("3D view"),
-#            includeCSS("loader.css"),
-#            shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
-#            shiny::HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
-#            rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
-#            conditionalPanel(condition = "output.tracing_nblast_complete",
-#                             h3("Score distribution"),
-#                             plotOutput("NBLAST_results_plot"),
-#                             h2("NBLAST results"),
-#                             uiOutput("NBLAST_MainTable"),
-#                             br(),
-#                             downloadButton('NBLAST_results_download', 'Download all scores as CSV')
-#            )
-#          )
-#       )
-#     ),
- 
+#####################
+
+ tabPanel("NBLAST",
+          sidebarLayout(
+            sidebarPanel(
+              h2("NBLAST Against the LH Library"),
+              shiny::HTML("Want to know what cell type your neuron belongs to? Or find a genetic line for it?
+                   Choose a neuron from out library or a neuron you have uploaded and blast it against our library.
+                   If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
+                   rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b>
+                   in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: #F21A00;'>red = best</span> to <span style='color: #3B9AB2;'>cyan = worst</span>)."),
+              shiny::HTML("See what the scores mean <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>here</a>"),
+              hr(),
+              strong("To NBLAST neurons they must be in the neuron selection table, in the Explore tab"),
+              hr(),
+              selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
+              uiOutput("ChooseUploadedSkeletons"),
+              uiOutput("NBLAST_SkeletonType"),
+              uiOutput("NBLAST_ChooseFromLibrary"),
+              uiOutput("NBLAST_ChooseID"),
+              shiny::HTML("<i>If multiple neurons are chosen, NBLAST scores will be averaged across these neurons. I.e. they will be treated as one amalgamated neuron</i><br /><br />"),
+              sliderInput(inputId = "NumHits",label = "no. hits to visualise:", 1, 100, 10, 1),
+              checkboxInput("UseMean", label="Use mean scores", value= TRUE),
+              shiny::HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
+                   This is particularly useful for clustering neurons into types, rather than,
+                   for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
+              actionButton("NBLASTGO","NBLAST")
+              ),
+          mainPanel(
+            h2("3D view"),
+            includeCSS("loader.css"),
+            shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
+            shiny::HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+            rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
+            conditionalPanel(condition = "output.tracing_nblast_complete",
+                             h3("Score distribution"),
+                             plotOutput("NBLAST_results_plot"),
+                             h2("NBLAST results"),
+                             uiOutput("NBLAST_MainTable"),
+                             br(),
+                             downloadButton('NBLAST_results_download', 'Download all scores as CSV')
+            )
+          )
+       )
+     ),
+
 ###################
 # LH Naming System #
 ###################

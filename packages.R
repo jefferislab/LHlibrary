@@ -20,8 +20,8 @@ library(lhns)
 library(wesanderson)
 library(data.table)
 library(ggplot2)
-library(physplit.analysis)
-library(physplitdata)
+library(DT)
+
 
 # Load some functions we might need
 source("helper.R")
@@ -48,11 +48,13 @@ pn.axons.light[,"cell.type"] = pn.axons.light[,"GlomType"]
 pn.axons.light.dps[,"cell.type"] = pn.axons.light.dps[,"GlomType"]
 pn.axons.light[,"anatomy.group"] = paste0("AL_",pn.axons.light[,"tract"])
 pn.axons.light.dps[,"anatomy.group"] = paste0("AL_",pn.axons.light.dps[,"tract"])
+jfw.lhns = subset(lhns::jfw.lhns,!is.na(cell.type)&cell.type!="notLHproper")
+jfw.lhns.dps = subset(lhns::jfw.lhns.dps,!is.na(cell.type)&cell.type!="notLHproper")
 
 # Construct all neurons object
-all.neurons = c(most.lhns,most.lhins,lh.splits.dps,mbons.light.dps,emlhns,pn.axons.light)
+all.neurons = c(most.lhns,most.lhins,lh.splits.dps,mbons.light.dps,emlhns,pn.axons.light,jfw.lhns)
 all.neurons[,"id"] = names(all.neurons)
-all.neurons.dps = c(most.lhns.dps,most.lhins.dps,lh.splits.dps,mbons.light.dps,emlhns.dps,pn.axons.light.dps)
+all.neurons.dps = c(most.lhns.dps,most.lhins.dps,lh.splits.dps,mbons.light.dps,emlhns.dps,pn.axons.light.dps,jfw.lhns.dps)
 all.neurons.dps[,"id"] = names(all.neurons.dps)
 
 # Sort out meta data and remove NAs to be blanks
@@ -72,28 +74,8 @@ cells = paste0("nm20",names(dye.fills))
 cells = cells[cells%in%names(physplitdata::smSpikes)]
 dye.fills = dye.fills[cells%in%names(physplitdata::smSpikes)] # Final list of neurons for which there is e-phy data
 
-# Get the E-Phys data
-ephys.lhns = physplit.analysis::create_raw_summary_array(x = physplitdata::smSpikes, cells = cells)
-odours = colnames(ephys.lhns)
-ephys.lhns.m = physplit.analysis::createSummarySpikesMat(ephys.lhns,NALimit=3,numSamplePoints=7)
-choose.just.max1.cols = as.logical(rep(c(0,0,1,0,0,0,0),ncol(ephys.lhns.m)/7))
-ephys.lhns.m = ephys.lhns.m[,choose.just.max1.cols]
-colnames(ephys.lhns.m) = odours[1:ncol(ephys.lhns.m)]
-row.cells = dye.fills[gsub("nm20","",rownames(ephys.lhns.m))]
-rownames(ephys.lhns.m) = row.cells[,"cell.type"]
-ephys.lhns.m = ephys.lhns.m[order(rownames(ephys.lhns.m)),order(colnames(ephys.lhns.m))]
-
-# Select certain odours to show
-ephys.lhns.m = ephys.lhns.m[,!colnames(ephys.lhns.m)%in%c("ClrBL","ClrB2","FlyFM")]
-colnames(ephys.lhns.m) = c( "Mineral Oil", "trans-2-Hexenal", "Geranyl acetate", "Propyl acetate", "Isoamyl acetate", "Ethyl 3-hydroxybutyrate", "Nonanal", 
-   "11-cis vaccenyl acetate- CVA", "Methyl salicylate", "Hexyl acetate", "Phenethyl alcohol", "Acetoin acetate", "Ethyl hexanoate", "2-Phenethyl acetate", "5 odour mix", "Benzaldehyde", "b-citronellol", "1-Hexanol", "Farnesol", "Water blank", "Cadaverine", 
-   "Spermine", "Acetoin", "Methyl acetate", "Acetic acid", "Propionic Acid", "Butyric acid", "Ammonia", 
-   "Pyridine", "Phenylacetaldehyde", "Hydrochloric acid", "Phenylacetic acid", "Vinegar mimic", "Geosmin",  "Vineger and Geosmin mix",
-   "Phenylethylamine")
-
 # Selected columns to display
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")
-
 
 # Data management
 pnt_all = sort(unique(all.neurons[,"pnt"]))
