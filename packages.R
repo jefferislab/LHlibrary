@@ -103,8 +103,6 @@ split_vnc_images = split_vnc_images[!grepl("ntitled|creenshot",split_vnc_images)
 lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
 lines = intersect(lh_line_info$linecode,lines) # Some lines are lost...
 
-# Get ready for action
-plot.new()
 
 ############
 # Old Code #
