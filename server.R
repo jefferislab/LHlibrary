@@ -20,7 +20,7 @@ shinyServer(function(input, output, session) {
   vals$zoom = 0.4 # Zoom onto brain
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
   vals$neurons <- subset(all.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
-  vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="PD2a1")[,selected_columns])
+  vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
   vals$split_brain_images_chosen = split_brain_images
@@ -53,6 +53,7 @@ shinyServer(function(input, output, session) {
   lapply(1:length(lines), function(i) {
     observeEvent(input[[lines[i]]], {
       showModal(modalDialog(
+        size = "l",
         title = lines[i],
         tabsetPanel(type = "tabs",
                     tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "470px",width="879px",align = "center")),
@@ -127,6 +128,12 @@ shinyServer(function(input, output, session) {
     vals$neuronsDF <- data.table::data.table(vals$neurons[,])
   })
   
+  # Clear neurons and neuronsDF
+  observeEvent(input$Clear, {
+    vals$neurons <- nat::neuronlist()
+    vals$neuronsDF <- data.frame()
+  })
+  
   #####################
   # Choose Library LHNs #
   #####################
@@ -135,7 +142,7 @@ shinyServer(function(input, output, session) {
   output$LHNselection <- renderUI({
     if(input$Type%in%c("ON","LN","IN","MBON","LHN")){
       LHN_choices =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
-      selectInput("lhns", label = paste0("Cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
+      selectInput("lhns", label = paste0("cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
   
@@ -145,7 +152,7 @@ shinyServer(function(input, output, session) {
       PNT_all =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
       PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^ad",PNT_all)],`Anterior ventral`=PNT_all[grepl("^av",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pd",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pv",PNT_all)])
       PNT_choices = c(PNT_choices, list(`Other`= c(PNT_all[!PNT_all%in%unlist(PNT_choices)])))
-      selectInput("PNT", label = paste0("Primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
+      selectInput("PNT", label = paste0("primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
   
@@ -153,7 +160,7 @@ shinyServer(function(input, output, session) {
   output$AGselection <- renderUI({
     if(is_lhn_type(input$Type)){
       AG_choices =  sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"anatomy.group"]))
-      selectInput("AG", label = paste0("Anatomy groups (",length(AG_choices),") :"), choices = c("all in selected primary neurite tracts",AG_choices),selected = "all in selected primary neurite tracts", multiple=TRUE, selectize=TRUE)
+      selectInput("AG", label = paste0("anatomy groups (",length(AG_choices),") :"), choices = c("all in selected primary neurite tracts",AG_choices),selected = "all in selected primary neurite tracts", multiple=TRUE, selectize=TRUE)
     }
   })
   
@@ -165,7 +172,7 @@ shinyServer(function(input, output, session) {
       }else{
         CT_choices = sort(unique(subset(all.neurons[,],anatomy.group%in%input$AG&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
       }
-      selectInput("CT", label = paste0("Cell types (",length(CT_choices),") :"), choices = c("all in selected anatomy groups",CT_choices), selected = "all in selected anatomy groups", multiple=TRUE, selectize=TRUE)
+      selectInput("CT", label = paste0("cell types (",length(CT_choices),") :"), choices = c("all in selected anatomy groups",CT_choices), selected = "all in selected anatomy groups", multiple=TRUE, selectize=TRUE)
     }
   })
   
@@ -195,7 +202,7 @@ shinyServer(function(input, output, session) {
                              `Visual projections`= input_all[grepl("LO",input_all )],
                              `Other`= input_all[grepl("notLHproper|Expansive",input_all )])
         input_choices = input_choices[sapply(input_choices,length)>1] # get rid of empty fields
-        selectInput("PNtype", label = paste0("Projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
+        selectInput("PNtype", label = paste0("projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
       }
     }
   })
@@ -215,7 +222,7 @@ shinyServer(function(input, output, session) {
                              `Visual projections`= input_all[grepl("LO",input_all )],
                              `Other`= input_all[grepl("notLHproper|Expansive",input_all )])
         input_choices = input_choices[sapply(input_choices,length)>1] # get rid of empty fields
-        selectInput("PN", label = paste0("Projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
+        selectInput("PN", label = paste0("projection neuron types (",length(unlist(input_choices)),") :"), choices = input_choices, selected = NULL, multiple=TRUE, selectize=TRUE)
       }
     }
   })
@@ -265,7 +272,8 @@ shinyServer(function(input, output, session) {
   # Show neuron selection table with some table-wide buttons above it
   output$MainTable<-renderUI({
     shiny::fluidPage(
-      box(width=12,
+      shinydashboard::box(
+            width=12,
             column(6,offset = 0,
                    shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
@@ -348,9 +356,9 @@ shinyServer(function(input, output, session) {
     )
   )
   
-  ######################
+  ########################
   # Modify Colours Table #
-  ######################
+  ########################
   
   # Delete rows that have been checked
   observeEvent(input$Col_row_head,{
@@ -379,7 +387,9 @@ shinyServer(function(input, output, session) {
       h3(shiny::strong("select a colour"),align="center"),
       uiOutput("OldColour"),
       actionButton("ChangeColour","change")
-    )
+    ),
+    size = "s",
+    easyClose = TRUE
   )
   
   # Modify colours
@@ -388,7 +398,9 @@ shinyServer(function(input, output, session) {
       h3(shiny::strong("select a colour"),align="center"),
       uiOutput("RandomStartColour"),
       actionButton("ChangeColourMultiple","change")
-    )
+    ),
+    size = "s",
+    easyClose = TRUE
   )
   
   # Render old neuron colour and select new one in modal window
@@ -433,7 +445,9 @@ shinyServer(function(input, output, session) {
       h3(shiny::strong("download data"),align="center"),
       selectInput(inputId='DownloadType', label=NULL, choices = c("neurons in table","e-phys data for relevant neurons in table"), selected = "neurons in table", multiple=FALSE, selectize=TRUE),
       downloadButton("downloadData", "download")
-    )
+    ),
+    size = "s",
+    easyClose = TRUE
   )
   
   # Download skeletons
@@ -447,7 +461,7 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       if(input$DownloadType=="neurons in table"){
-        downloadskeletons(vals$neurons,dir = file,subdir = pnt,format="swc",file = paste0(cell.type,"_",id),Force = TRUE)
+        downloadskeletons(vals$neurons,dir = file,subdir = pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE)
       }else{
         cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%dye.fills])
         csv = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%cts,]
@@ -457,13 +471,13 @@ shinyServer(function(input, output, session) {
     contentType = "application/zip"
   )
   
-  #####################
+  ######################
   # Plotly E-Phys Data #
-  #####################
+  ######################
   
   # Choose cell types for E-Phys plot 
   output$ChooseCTs <- renderUI({
-    ct_choices = sort(unique(dye.fills[,"cell.type"]))
+    ct_choices = sort(unique(lhn_odour_responses))
     ct_choices = ct_choices[!ct_choices%in%c("notLHproper")] # Get rid of uncertain LHNs
     if(length(input$SelectionTable_rows_selected)>1){
       cts = sort(unique(vals$neurons[,"cell.type"][-input$SelectionTable_rows_selected]))
@@ -471,13 +485,12 @@ shinyServer(function(input, output, session) {
       cts = sort(unique(vals$neurons[,"cell.type"]))
     }
     cts_in_data = cts[cts%in%ct_choices]
-    ct_choices = ct_choices[ct_choices%in%cts]
-    selectInput("EphysSelection", label = paste0("Cell types with electrophysiological response data (",length(ct_choices),") :"), choices = ct_choices, selected = cts_in_data, multiple=TRUE, selectize=TRUE)
+    selectInput("EphysSelection", label = paste0("cell types with electrophysiological response data (",length(ct_choices),") :"), choices = ct_choices, selected = cts_in_data, multiple=TRUE, selectize=TRUE)
   })
   
   # Choose odours for which to plot cell type responses
   output$ChooseOdours <- renderUI({
-    Odour_choices = colnames(lhns::lhn_odour_responses)
+    Odour_choices = unname(colnames(lhns::lhn_odour_responses))
     selectInput("OdourSelection", label = paste0("choose odour (",length(Odour_choices),") :"), choices = Odour_choices, selected = "Vinegar mimic", multiple=TRUE, selectize=TRUE)
   })
   
@@ -497,9 +510,17 @@ shinyServer(function(input, output, session) {
     }
     if(input$CTmean){ # Take cell type mean
       if(!is.null(nrow(data))){
+        error = apply(data, 2, function(x) tapply(x, rownames(data), sd))
         data = apply(data, 2, function(x) tapply(x, rownames(data), mean))
+        error[is.na(error)] = 0
+        errorminus = data-error
+        errorminus[errorminus>0] = 0
+        errorminus = error+errorminus
+      }else{
+        error = errorminus = 0
       }
     }else{ # Otherwise differently name neurons of the same cell type
+      error = errorminus = 0
       tbl = table(rownames(data))
       r = rownames(data)
       for(t in 1:length(tbl)){
@@ -526,7 +547,7 @@ shinyServer(function(input, output, session) {
       alternating = c(alternating,a)
       counter = ifelse((as.integer(i) %% 2)==1,counter+1,counter)
     }
-    plot.order = alternating[match(smells,names(alternating))]
+    plot.order = alternating[match(smells,names(alternating))]+1
     # Choose colours for cell.types
     if(length(unique(input$EphysSelection))<2){
       plotting.colours = united.orange # Nice orange colour, for single cell type plots
@@ -545,17 +566,21 @@ shinyServer(function(input, output, session) {
         spikes = idata,
         odours = names(idata),
         name = ct,
-        line = list(
-          color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")"),
-          shape = "spline",
-          smoothing = 1.3,
-          width = 3
+        marker = list(
+          color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")")
         ),
-        mode = "lines",
-        type = "scatter"
+        error_y = list(
+          type="data",
+          array = error[match(1:length(data),plot.order)],
+          symmetric = FALSE,
+          arrayminus = errorminus[match(1:length(data),plot.order)],
+          color = paste0("rgba(",paste(grDevices::col2rgb("grey80",alpha=TRUE),collapse=", "),")")
+        ),
+        width = 0.2,
+        type = "bar"
       )
       trace$odours <- factor(trace$odours, levels = trace[["odours"]])
-      p <- plotly::add_trace(p,x=trace$odours,y=trace$spikes,connectgaps=trace$connectgaps, line=trace$line, mode=trace$mode, name=trace$name, type=trace$type)
+      p <- plotly::add_trace(p,x=trace$odours,y=trace$spikes,marker=trace$marker, width = trace$width,barmode=trace$barmode, name=trace$name, type=trace$type, error_y=trace$error_y, opacity = 0.5)
     }else{ # Plot multiple
       for(i in 1:nrow(data)){
         idata = data[i,match(1:ncol(data),plot.order)]
@@ -570,20 +595,24 @@ shinyServer(function(input, output, session) {
           spikes = idata,
           odours = names(idata),
           name = ct,
-          line = list(
-            color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=FALSE),collapse=", "),", ",alpha,")"), 
-            shape = "spline",
-            smoothing = 1.3,
-            width = 3
+          marker = list(
+            color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")")
           ),
-          mode = "lines",
-          type = "scatter"
+          error_y = list(
+            type="data",
+            array = ifelse(is.null(nrow(error)),NULL,error[i,match(1:ncol(data),plot.order)]),
+            symmetric = FALSE,
+            arrayminus = ifelse(is.null(nrow(error)),NULL,errorminus[i,match(1:ncol(data),plot.order)]),
+            color = paste0("rgba(",paste(grDevices::col2rgb("grey80",alpha=TRUE),collapse=", "),")")
+          ),
+          width = 0.2,
+          type = "bar"
         )
         trace$odours <- factor(trace$odours, levels = trace[["odours"]])
-        p <- plotly::add_trace(p,x=trace$odours,y=trace$spikes,connectgaps=trace$connectgaps, line=trace$line, mode=trace$mode, name=trace$name, type=trace$type)
+        p <- plotly::add_trace(p,x=trace$odours,y=trace$spikes,marker=trace$marker, width = trace$width, barmode=trace$barmode, name=trace$name, type=trace$type, error_y=trace$error_y, opacity = 0.5)
       }
     }
-    p <- layout(p,margin = list(b = 200),yaxis = list (title = "spike number")) # margin arument prevents x-axis cut off
+    p <- layout(p,margin = list(b = 200),yaxis = list (title = "spike number"),barmode="group") # margin arument prevents x-axis cut off
     p$elementId <- NULL
     p
   })
@@ -611,8 +640,14 @@ shinyServer(function(input, output, session) {
       colnames(data) = ns
     }
     if(input$OdourCTMean){ # Take cell type mean
+      error = t(apply(data, 1, function(x) tapply(x, colnames(data), sd, na.rm=TRUE)))
       data = t(apply(data, 1, function(x) tapply(x, colnames(data), mean)))
+      error[is.na(error)] = 0
+      errorminus = data-error
+      errorminus[errorminus>0] = 0
+      errorminus = error+errorminus
     }else{
+      error = errorminus = 0
       tbl = table(colnames(data))
       r = colnames(data)
       for(t in 1:length(tbl)){
@@ -653,17 +688,21 @@ shinyServer(function(input, output, session) {
         spikes = idata,
         cell.types = names(idata),
         name = odour,
-        line = list(
-          color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")"),
-          shape = "spline",
-          smoothing = 1.3,
-          width = 3
+        marker = list(
+          color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")")
         ),
-        mode = "lines",
-        type = "scatter"
+        error_y = list(
+          type="data",
+          array = error[match(1:length(data),plot.order)],
+          symmetric = FALSE,
+          arrayminus = errorminus[match(1:length(data),plot.order)],
+          color = paste0("rgba(",paste(grDevices::col2rgb("grey80",alpha=TRUE),collapse=", "),")")
+        ),
+        width = 0.2,
+        type = "bar"
       )
       trace$cell.types <- factor(trace$cell.types, levels = trace[["cell.types"]])
-      p <- plotly::add_trace(p,x=trace$cell.types,y=trace$spikes,connectgaps=trace$connectgaps, line=trace$line, mode=trace$mode, name=trace$name, type=trace$type)
+      p <- plotly::add_trace(p,x=trace$cell.types,y=trace$spikes,marker=trace$marker, width = trace$width,barmode=trace$barmode, name=trace$name, type=trace$type, error_y=trace$error_y, opacity = 0.5)
     }else{ # Plot multiple traces
       for(i in 1:nrow(data)){
         idata = data[i,match(1:ncol(data),plot.order)]
@@ -677,20 +716,24 @@ shinyServer(function(input, output, session) {
           spikes = idata,
           cell.types = names(idata),
           name = odour,
-          line = list(
-            color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")"), 
-            shape = "spline",
-            smoothing = 1.3,
-            width = 3
+          marker = list(
+            color = paste0("rgba(",paste(grDevices::col2rgb(colour,alpha=TRUE),collapse=", "),")")
           ),
-          mode = "lines",
-          type = "scatter"
+          error_y = list(
+            type="data",
+            array = if(is.null(nrow(error))){NULL}else{error[i,match(1:ncol(data),plot.order)]},
+            symmetric = FALSE,
+            arrayminus = if(is.null(nrow(error))){NULL}else{errorminus[i,match(1:ncol(data),plot.order)]},
+            color = paste0("rgba(",paste(grDevices::col2rgb("grey80",alpha=TRUE),collapse=", "),")")
+          ),
+          width = 0.2,
+          type = "bar"
         )
         trace$cell.types <- factor(trace$cell.types, levels = trace[["cell.types"]])
-        p <- plotly::add_trace(p,x=trace$cell.types,y=trace$spikes,connectgaps=trace$connectgaps, line=trace$line, mode=trace$mode, name=trace$name, type=trace$type)
+        p <- plotly::add_trace(p,x=trace$cell.types,y=trace$spikes,marker=trace$marker, width = trace$width, barmode=trace$barmode, name=trace$name, type=trace$type, error_y=trace$error_y, opacity = 0.5)
       }
     }
-    p <- layout(p,margin = list(b = 160),yaxis = list (title = "spike number"))
+    p <- layout(p,margin = list(b = 160),yaxis = list (title = "spike number"),barmode="group")
     p$elementId <- NULL # Avoid R Shiny warning abotu unusd unique plotly IDs
     p
   })
@@ -748,7 +791,8 @@ shinyServer(function(input, output, session) {
       ),
       checkboxInput("TracingMirror", "flip brain-side", value=FALSE),
       actionButton(inputId = "TracingUploaded",label = "upload",icon = icon("upload"))
-    )
+    ),
+    easyClose = TRUE
   )
   
   # Select CATMAID login details, and remember them by using a reactive object!
@@ -858,9 +902,9 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  #########
+  ##########
   # NBLAST #
-  #########
+  ##########
   
   # Dynamically update Uploaded Neurons selection
   output$ChooseUploadedSkeletons <- renderUI({
@@ -1012,14 +1056,14 @@ shinyServer(function(input, output, session) {
   })
 
   
-  ########################
+  ##########################
   # NBLAST Selection Table #
-  ########################
+  ##########################
   
   # Show neuron selection table with some table-wide buttons above it
   output$NBLAST_MainTable<-renderUI({
     shiny::fluidPage(
-      box(width=12,
+      shinydashboard::box(width=12,
           column(6,offset = 0,
                  shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                  actionButton(inputId = "NBLAST_Del_row_head",label = "delete selected"),
@@ -1084,7 +1128,7 @@ shinyServer(function(input, output, session) {
   
   # Delete rows that have been checked
   observeEvent(input$NBLAST_Col_row_head,{
-    showModal(NBLAST_modal_recolor_multiple)
+    showModal(NBLAST_modal_recolor_multiple,size="s")
   })
   
   # Observe input$NBLAST_lastClick and then act to delete or modify a row
@@ -1161,13 +1205,13 @@ shinyServer(function(input, output, session) {
     cts_in_lines = cts_in_lines[!cts_in_lines%in%cts]
     cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
     cts_choices = cts_choices[sapply(cts_choices,length)>0] # get rid of empty fields
-    selectInput("LineCodeCTs", label = paste0("Cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
+    selectInput("LineCodeCTs", label = paste0("cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })
   
   output$LineCode <- renderUI({
     linecodes = sort(unique(as.character(subset(lh_line_info,grepl(as.character(input$LineCodeCTs),as.character(cell.type)))[,"linecode"])))
     if(!is.null(lines)&length(lines)>0){
-      selectInput("LineCode", label = paste0("Split lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
+      selectInput("LineCode", label = paste0("split-GAL4 lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
     }
   })
      
@@ -1187,9 +1231,9 @@ shinyServer(function(input, output, session) {
     ))
   }, deleteFile = FALSE)
   
-  #########
+  ########
   # TEST #
-  #########
+  ########
   
   output$Test = renderPrint({
     #str(vals$CATMAID)

@@ -9,8 +9,10 @@ label.help <- function(label,id){
 
 # Get neurons that have been selected
 get_neurons<-function(input, db){
+  skel.type = input$SkeletonType
   if(grepl("xample",input$Type)){
     cts = "PD2a1"
+    skel.type = "FlyCircuit"
   }else if (is_lhn_type(input$Type)){
     if(sum(grepl("all",input$CT))>0){
       if(sum(grepl("all",input$AG))>0){
@@ -36,7 +38,7 @@ get_neurons<-function(input, db){
   }else{
     cts = NULL
   }
-  neurons = subset(db,skeleton.type%in%input$SkeletonType&cell.type%in%cts)
+  neurons = subset(db,skeleton.type%in%skel.type&cell.type%in%cts)
   neurons[,"colour"] = darjeeling(length(neurons)) # Assign darjeeling colours
   neurons
 }

@@ -6,6 +6,7 @@ library(shiny)
 library(shinyBS)
 library(shinyURL)
 library(shinythemes)
+library(shinydashboard)
 library(slickR)
 library(elmr)
 library(catnat)
@@ -21,7 +22,6 @@ library(wesanderson)
 library(data.table)
 library(ggplot2)
 library(DT)
-
 
 # Load some functions we might need
 source("helper.R")
