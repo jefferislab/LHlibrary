@@ -370,7 +370,10 @@ tabPanel("the lateral horn",
                                 However, in order to resolve outstanding questions about its function, its structure in terms of
                                 circuit logic needs to be fully understood, and this will require high-resolution, synaptic level reconstruction of LH circuitry.
                                 The large number of KCs enables sparse odor coding, which is proposed to avoid synaptic interference during memory formation.
-                                Why should the lateral horn also have such a large number of neurons and cell types?")
+                                Why should the lateral horn also have such a large number of neurons and cell types?"),
+                    shiny::br(),
+                    shiny::br(),
+                    shiny::HTML("<i>Diagram by Philipp Schlegel</i>")
                     ),
              column(6,
                     img(src='neuroanatomy.png', width="738px", height="434px", align = "center")
