@@ -44,8 +44,8 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                       ))
                                                     })
                                                   ),
-                                                  tags$head(tags$style(".modal-dialog{ width:923px}")), # Will this affect modals elsewhere in the app?
-                                                  tags$head(tags$style(".modal-body{ height:600px}")),
+                                                  #tags$head(tags$style(".modal-dialog{ width:923px}")), # Will this affect modals elsewhere in the app?
+                                                  #tags$head(tags$style(".modal-body{ height:600px}")),
                                                   lapply(1:length(pnt_lhns), function(i) {
                                                     shinyBS::bsModal(id = paste0("AG_modal_",pnt_lhns[i]), title = pnt_lhns[i], trigger = pnt_lhns[i], 
                                                                      slickR::slickROutput(paste0("Carousel",pnt_lhns[i]), width = 879, height = 469),
@@ -173,7 +173,10 @@ tabPanel("data viewer",
                                  uiOutput("ChooseCTs"),
                                  checkboxInput(inputId="CTmean", value=TRUE, label ="use cell type means"),
                                  hr(),
-                                 plotly::plotlyOutput("Ephys")
+                                 plotly::plotlyOutput("Ephys"),
+                                 shiny::br(),
+                                 shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> for details.</i>")
                               ),
                       tabPanel("odour search",
                                br(),
@@ -183,7 +186,10 @@ tabPanel("data viewer",
                                  div(style="display:inline-block",checkboxInput(inputId="OdourCTMean", value= TRUE, label ="use mean of cell types"))
                                ),
                                hr(),
-                               plotly::plotlyOutput("OdoursResponses")
+                               plotly::plotlyOutput("OdoursResponses"),
+                               shiny::br(),
+                               shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> for details.</i>")
                       ),
                       tabPanel("split-GAL4 lines",
                                br(),
@@ -293,12 +299,20 @@ tabPanel("naming system",
                 shiny::br(),
                 shiny::HTML("We have also classified projection neurons to the lateral horn i.e. the major inputs to lateral horn neurons.
                             We divided LH inputs into functional categories based on the sensory modality inferred from their dendritic neuropil and named them by
-                            extending the naming system of <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945'>Tanaka et al. (2012)</a>.")
+                            extending the naming system of <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945'>Tanaka et al. (2012)</a>."),
+                shiny::br(),
+                shiny::br(),
+                shiny::HTML("Below are the results from our attempts to find and quantify the number of neurons in the major LH-bound primary neurite tracts - which had originally been defined
+                            at the level of light microscopy - using a recent whole brain dataset for the adult female fly brain gathered by <a href='https://en.wikipedia.org/wiki/Transmission_electron_microscopy'>electron microscopy</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368'>(Zheng et al. 2018)</a>.
+                           (Names with an X indicate 'new' tracts that were in the electron micrographs and found to run approximately parallel with tracts we had identified at light-level, and so in terms of nomenclature neurons therein have stayed as part of the same primary neuritr cluster.)")
                 ),
             column(6,
                    img(src='LHN_naming_cartoon.png', width="738px", height="621px", align = "center")
                    )
           ),
+          shiny::br(),
+          shiny::br(),
+          dataTableOutput('TRACTS'),
           shiny::br(),
           shiny::br(),
           shiny::HTML("<i>Text based on Frechter et al. 2018 and Dolan et al. 2018</i>"), 
@@ -401,7 +415,20 @@ tabPanel("the lateral horn",
                     shiny::div(shiny::img(src='neuroanatomy.png', width="738px", height="434px"),align="center"),
                     shiny::br(),
                     shiny::br(),
-                    shiny::div(shiny::img(src='LHON_3A_PV5a.png', width="137px", height="98px"),align="center")
+                    shiny::h4("a lateral horn output neuron - PV5a1"),
+                    shiny::div(shiny::img(src='LHON_3A_PV5a.png', width="412px", height="295px"),align="center"),
+                    shiny::br(),
+                    shiny::br(),
+                    shiny::h4("a lateral horn local neuron - PV5a1"),
+                    shiny::div(shiny::img(src='LHLN_1D_AV4a1.png', width="308px", height="267px"),align="center"),
+                    shiny::br(),
+                    shiny::br(),
+                    shiny::h4("a lateral horn input neuron - WED-PN1"),
+                    shiny::div(shiny::img(src='LHPN_70C_WED-PN1.png', width="504px", height="621px"),align="center"),
+                    shiny::br(),
+                    shiny::br(),
+                    shiny::HTML("<i>Black, DA1 PN. Coloured neuron are reconstructions from electron microscopy, purple - primary neurite tract,
+                                blue - dendrite, orange - axon, green - intervening cable, cyan - input synapses, red - output synapses.</i>")
              )
                     ),
            shiny::hr(),

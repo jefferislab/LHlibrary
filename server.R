@@ -11,9 +11,9 @@ source("functions.R")
 shinyServer(function(input, output, session) {
   
   
-  ###################
+  ####################
   # Reactive Objects #
-  ###################
+  ####################
   
   # Get neurons for plotting and selection table
   vals <- reactiveValues()
@@ -277,7 +277,7 @@ shinyServer(function(input, output, session) {
                    shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
                    actionButton(inputId = "Col_row_head",label = "recolour selected"),
-                   actionButton(inputId = "Compare_row_head",label = "compare selected"),
+                   actionButton(inputId = "Compare_row_head",label = "see axon-dendrite split for selected"),
                    actionButton(inputId = "Download",label = "download data"),
                    shiny::HTML('</div>')
             ),
@@ -340,20 +340,33 @@ shinyServer(function(input, output, session) {
   # Select neurons from table to compare 
   observeEvent(input$Compare_row_head,{
     row_to_del=as.numeric(gsub("Row","",input$checked_rows)) # Here 'row_to_del' is actually the selected rows
-    vals$Comparison = vals$neuronsDF[row_to_del] # Use this in compare_neurons_modal
+    vals$Comparison$neurons = vals$neurons[row_to_del] # Use this in compare_neurons_modal
+    #dput(names(vals$Comparison$neurons))
     showModal(compare_neurons_modal)
   }
   )
   
   # Compare neurons selected in table
   compare_neurons_modal<-modalDialog(
-    h3(shiny::strong("selected neurons"),align="center"),
-    fluidPage(
-      mainPanel(
-      rgl::rglwidgetOutput("plot3D", width="1000px", height="1000px") # Doesn't work...
-      )
+    shiny::h3(shiny::strong("selected neurons"),align="center"),
+    shiny::fluidPage(
+      #shiny::plotOutput("compare_neurons_plot"),
+      #shiny::tableOutput("compare_neurons_table")
     )
   )
+  
+  compare_neurons_plot <- shiny::renderPlot({
+    row_to_del=as.numeric(gsub("Row","",input$checked_rows)) # Here 'row_to_del' is actually the selected rows
+    dput(names(vals$neurons[row_to_del]))
+    plot(vals$neurons[row_to_del])
+  })
+  
+  compare_neurons_table <- shiny::renderTable({
+    row_to_del=as.numeric(gsub("Row","",input$checked_rows)) 
+    vals$neurons[row_to_del][,]
+  })
+  
+  
   
   ########################
   # Modify Colours Table #
@@ -920,7 +933,7 @@ shinyServer(function(input, output, session) {
   # If choosing from library, select what data type first
   output$NBLAST_SkeletonType <- renderUI({
     if(input$QueryType=="Library"){
-      selectInput(inputId='NBLAST_SkeletonType', label='dataset:', choices = sort(unique(vals$neurons[,"skeleton.type"])), selected = choices[1], multiple=FALSE, selectize=TRUE)
+      selectInput(inputId='NBLAST_SkeletonType', label='dataset:', choices = sort(unique(vals$neurons[,"skeleton.type"])), selected = sort(unique(vals$neurons[,"skeleton.type"]))[1], multiple=FALSE, selectize=TRUE)
       }
   })
   
@@ -1212,14 +1225,28 @@ shinyServer(function(input, output, session) {
   })
   
   output$LineCode <- renderUI({
-    linecodes = sort(unique(as.character(subset(lh_line_info,grepl(as.character(input$LineCodeCTs),as.character(cell.type)))[,"linecode"])))
+    if(is.null(input$LineCodeCTs)){
+      LineCodeCTs = "PD2a1"
+    } else if (is.na(input$LineCodeCTs)) {
+      LineCodeCTs = "PD2a1"
+    }else{
+      LineCodeCTs = input$LineCodeCTs
+    }
+    linecodes = sort(unique(as.character(subset(lhns::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
     if(!is.null(lines)&length(lines)>0){
       selectInput("LineCode", label = paste0("split-GAL4 lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
     }
   })
      
   output$MaximalProjection <- renderImage({
-    maxprojection = split_brain_images[grepl(input$LineCode,split_brain_images)]
+    if(is.null(input$LineCode)){
+      LineCode = "L991"
+    } else if (is.na(input$LineCode)) {
+      LineCode = "L991"
+    }else{
+      LineCode = input$LineCode
+    }
+    maxprojection = split_brain_images[grepl(LineCode,split_brain_images)]
     return(list(
       src = paste0("www/",maxprojection),
       filetype = "image/jpeg",width = "auto", height = "auto"
@@ -1227,12 +1254,25 @@ shinyServer(function(input, output, session) {
   }, deleteFile = FALSE)
   
   output$VNCMaximalProjection <- renderImage({
-    maxprojection = split_vnc_images[grepl(input$LineCode,split_vnc_images)]
+    if(is.null(input$LineCode)){
+      LineCode = "L991"
+    } else if (is.na(input$LineCode)) {
+      LineCode = "L991"
+    }else{
+      LineCode = input$LineCode
+    }
+    maxprojection = split_vnc_images[grepl(LineCode,split_vnc_images)]
     return(list(
       src = paste0("www/",maxprojection),
       filetype = "image/jpeg",width = "auto", height = "auto"
     ))
   }, deleteFile = FALSE)
+  
+  ########
+  # MISC #
+  ########
+  
+  output$TRACTS <- renderDataTable(lhns::lh_tract_data)
   
   ########
   # TEST #
