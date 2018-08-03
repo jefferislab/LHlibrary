@@ -24,7 +24,7 @@ shinyServer(function(input, output, session) {
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
   vals$split_brain_images_chosen = split_brain_images
-  
+  vals$message = NULL
   
   ############
   # Carousel #
@@ -53,7 +53,6 @@ shinyServer(function(input, output, session) {
   lapply(1:length(lines), function(i) {
     observeEvent(input[[lines[i]]], {
       showModal(modalDialog(
-        size = "l",
         title = lines[i],
         tabsetPanel(type = "tabs",
                     tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "470px",width="879px",align = "center")),
@@ -121,11 +120,11 @@ shinyServer(function(input, output, session) {
     # Add neurons
     selected = get_neurons(input=input,db=all.neurons)
     if("neuronlist"%in%class(selected)&length(selected)>0){ # Prevent neurons of the same name being added together
-      new = selected[!names(selected)%in%names(original)] 
+      newneurons = selected[!names(selected)%in%names(original)]
+      # Neurons are deleted from the selection via an observe app below
+      vals$neurons <- c(original,newneurons)
+      vals$neuronsDF <- data.table::data.table(vals$neurons[,])
     }
-    # Neurons are deleted from the selection via an observe app below
-    vals$neurons <- c(original,new)
-    vals$neuronsDF <- data.table::data.table(vals$neurons[,])
   })
   
   # Clear neurons and neuronsDF
@@ -150,7 +149,7 @@ shinyServer(function(input, output, session) {
   output$PNTselection <- renderUI({
     if(is_lhn_type(input$Type)){
       PNT_all =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
-      PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^ad",PNT_all)],`Anterior ventral`=PNT_all[grepl("^av",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pd",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^pv",PNT_all)])
+      PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^AD",PNT_all)],`Anterior ventral`=PNT_all[grepl("^AV",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PD",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PV",PNT_all)])
       PNT_choices = c(PNT_choices, list(`Other`= c(PNT_all[!PNT_all%in%unlist(PNT_choices)])))
       selectInput("PNT", label = paste0("primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
@@ -196,8 +195,8 @@ shinyServer(function(input, output, session) {
                              `mediolateral antennal lobe tract (mlALT)`= input_all[grepl("AL-mlALT",input_all )],
                              `lateral antennal lobe tract (lALT)`= input_all[grepl("AL-lALT",input_all )],
                              `transverse antennal lobe tract`= input_all[grepl("AL-t",input_all )],
-                             `Putative gustatory projections`= input_all[grepl("GNG|mAL-PN|SOG",input_all )],
-                             `Putative mechanosensory projections`= input_all[grepl("WED",input_all)],
+                             `putative gustatory projections`= input_all[grepl("GNG|mAL-PN|SOG",input_all )],
+                             `putative mechanosensory projections`= input_all[grepl("WED",input_all)],
                              `Centrifgual projections`= input_all[grepl("Centrifugal",input_all )],
                              `Visual projections`= input_all[grepl("LO",input_all )],
                              `Other`= input_all[grepl("notLHproper|Expansive",input_all )])
@@ -446,7 +445,6 @@ shinyServer(function(input, output, session) {
       selectInput(inputId='DownloadType', label=NULL, choices = c("neurons in table","e-phys data for relevant neurons in table"), selected = "neurons in table", multiple=FALSE, selectize=TRUE),
       downloadButton("downloadData", "download")
     ),
-    size = "s",
     easyClose = TRUE
   )
   
@@ -477,7 +475,7 @@ shinyServer(function(input, output, session) {
   
   # Choose cell types for E-Phys plot 
   output$ChooseCTs <- renderUI({
-    ct_choices = sort(unique(lhn_odour_responses))
+    ct_choices = sort(unique(rownames(lhns::lhn_odour_responses)))
     ct_choices = ct_choices[!ct_choices%in%c("notLHproper")] # Get rid of uncertain LHNs
     if(length(input$SelectionTable_rows_selected)>1){
       cts = sort(unique(vals$neurons[,"cell.type"][-input$SelectionTable_rows_selected]))
@@ -485,6 +483,7 @@ shinyServer(function(input, output, session) {
       cts = sort(unique(vals$neurons[,"cell.type"]))
     }
     cts_in_data = cts[cts%in%ct_choices]
+    ct_choices = list(`LH neurons`= ct_choices[!grepl("PN",ct_choices)], `uniglomerular projection neurons` = ct_choices[grepl("PN",ct_choices)])
     selectInput("EphysSelection", label = paste0("cell types with electrophysiological response data (",length(ct_choices),") :"), choices = ct_choices, selected = cts_in_data, multiple=TRUE, selectize=TRUE)
   })
   
@@ -510,8 +509,8 @@ shinyServer(function(input, output, session) {
     }
     if(input$CTmean){ # Take cell type mean
       if(!is.null(nrow(data))){
-        error = apply(data, 2, function(x) tapply(x, rownames(data), sd))
-        data = apply(data, 2, function(x) tapply(x, rownames(data), mean))
+        error = apply(data, 2, function(x) tapply(x, rownames(data), sd, na.rm = TRUE))
+        data = apply(data, 2, function(x) tapply(x, rownames(data), mean, na.rm = TRUE))
         error[is.na(error)] = 0
         errorminus = data-error
         errorminus[errorminus>0] = 0
@@ -600,9 +599,9 @@ shinyServer(function(input, output, session) {
           ),
           error_y = list(
             type="data",
-            array = ifelse(is.null(nrow(error)),NULL,error[i,match(1:ncol(data),plot.order)]),
+            array =  if(is.null(nrow(error))){NULL}else{error[i,match(1:ncol(data),plot.order)]},
             symmetric = FALSE,
-            arrayminus = ifelse(is.null(nrow(error)),NULL,errorminus[i,match(1:ncol(data),plot.order)]),
+            arrayminus =  if(is.null(nrow(error))){NULL}else{errorminus[i,match(1:ncol(data),plot.order)]},
             color = paste0("rgba(",paste(grDevices::col2rgb("grey80",alpha=TRUE),collapse=", "),")")
           ),
           width = 0.2,
@@ -627,7 +626,7 @@ shinyServer(function(input, output, session) {
     }
     if(input$OdourMean){ # Take odours' mean
       if(!is.null(nrow(data))){
-        data = colSums(data)
+        data = colSums(data, na.rm = TRUE)
         ns = names(data)
         data = t(as.matrix(data))
         colnames(data) = ns
@@ -641,7 +640,7 @@ shinyServer(function(input, output, session) {
     }
     if(input$OdourCTMean){ # Take cell type mean
       error = t(apply(data, 1, function(x) tapply(x, colnames(data), sd, na.rm=TRUE)))
-      data = t(apply(data, 1, function(x) tapply(x, colnames(data), mean)))
+      data = t(apply(data, 1, function(x) tapply(x, colnames(data), mean, na.rm = TRUE)))
       error[is.na(error)] = 0
       errorminus = data-error
       errorminus[errorminus>0] = 0
@@ -779,9 +778,9 @@ shinyServer(function(input, output, session) {
                             These are not the same as your CATMAID login details."),             
                        hr(),
                        uiOutput("CATMAID_detail_server"),
-                       uiOutput("CATMAID_detail_authname"),
+                       shiny::div(style="display:inline-block", uiOutput("CATMAID_detail_authname")),
                        uiOutput("CATMAID_detail_authpassword"),
-                       uiOutput("CATMAID_detail_token"),
+                       shiny::div(style="display:inline-block", uiOutput("CATMAID_detail_token")),
                        selectInput('CATMAID_searchtype', 'search type',
                                    choices = list(`neuron annotation (regex accepted)`= "annotation",`neuron name (regex accepted)`= "name",`skeleton ID (multiples separated by a space)`= "skid"),
                                    selected =  list(`neuron name (regex accepted)`= "name"),
@@ -895,9 +894,9 @@ shinyServer(function(input, output, session) {
       # Now add these to the already selected library neurons
       original = vals$neurons
       # Add neurons
-      new = tracing_neurons[!names(tracing_neurons)%in%names(original)] # Prevent neurons of the same name being added together
+      newneurons = tracing_neurons[!names(tracing_neurons)%in%names(original)] # Prevent neurons of the same name being added together
       # Neurons are deleted from the selection via an observe app
-      vals$neurons <- c(original,new)
+      vals$neurons <- c(original,newneurons)
       vals$neuronsDF <- data.table::data.table(vals$neurons[,])
     }
   })
@@ -921,8 +920,8 @@ shinyServer(function(input, output, session) {
   # If choosing from library, select what data type first
   output$NBLAST_SkeletonType <- renderUI({
     if(input$QueryType=="Library"){
-      selectInput(inputId='NBLAST_SkeletonType', label='dataset:', choices = sort(unique(all.neurons[,"skeleton.type"])), selected = "FlyCircuit", multiple=FALSE, selectize=TRUE)
-    }
+      selectInput(inputId='NBLAST_SkeletonType', label='dataset:', choices = sort(unique(vals$neurons[,"skeleton.type"])), selected = choices[1], multiple=FALSE, selectize=TRUE)
+      }
   })
   
   output$NBLAST_ChooseFromLibrary <- renderUI({
@@ -936,11 +935,11 @@ shinyServer(function(input, output, session) {
   output$NBLAST_ChooseID <- renderUI({
     if(input$QueryType=="Library"){
       possible = subset(vals$neurons,skeleton.type%in%input$NBLAST_SkeletonType&cell.type%in%input$NBLAST_ChooseFromLibrary)
-      skel_choices = subset(vals$neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
+      skel_choices = subset(all.neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
       selectInput(inputId='NBLAST_ChooseID', label=paste0('individual neurons (',length(skel_choices),') :'), choices = skel_choices, selected = skel_choices[1], multiple=TRUE, selectize=TRUE)
     }
   })
-
+  
   # Get tracing and perform NBLAST
   observeEvent(input$NBLASTGO, {
     if(input$QueryType=="UserUpload"){
@@ -1038,7 +1037,7 @@ shinyServer(function(input, output, session) {
   # Plot NBLAST results
   output$NBLAST_View3D <- renderRglwidget({
     rgl::clear3d()
-    rgl::plot3d(FCWB)
+    rgl::plot3d(FCWB,alpha = 0.1)
     query_neurons <- vals$NBLAST$tracings
     query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.5)
     if(!is.null(query_neurons)) {
@@ -1200,10 +1199,14 @@ shinyServer(function(input, output, session) {
     cts = as.character(sort(unique(vals$neurons[,"cell.type"]))) # Selected cell types
     cts = cts[cts!="notLHproper"]
     cts_in_lines = unlist(strsplit(unique(cell_type_summary$cell.type),"/")) # All cell type in split-gAL4 lines
-    cts_in_lines = cts_in_lines[cts_in_lines!="notLHproper"]
-    chosen_in_lines = cts[cts%in%cts_in_lines]  # Selected cell types in lines
+    cts_in_lines = sort(cts_in_lines[cts_in_lines!="notLHproper"])
+    chosen_in_lines = sort(cts[cts%in%cts_in_lines])  # Selected cell types in lines
     cts_in_lines = cts_in_lines[!cts_in_lines%in%cts]
-    cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
+    if(length(chosen_in_lines)>1){
+      cts_choices = list(`linecodes for neurons in selection table`= chosen_in_lines,`linecodes`=cts_in_lines)
+    }else{
+      cts_choices = list(`linecodes`= sort(c(cts_in_lines,chosen_in_lines))) 
+    }
     cts_choices = cts_choices[sapply(cts_choices,length)>0] # get rid of empty fields
     selectInput("LineCodeCTs", label = paste0("cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })

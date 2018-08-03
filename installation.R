@@ -3,8 +3,8 @@
 ########################
 
 # From CRAN
-cran.packages = c("shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","downloader","colourpicker","formattable","packrat","data.table",
-                  "ggplot2","DT")
+cran.packages = c("shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","formattable","packrat","data.table",
+                  "ggplot2","DT","shinydashboard")
 for(cp in cran.packages){
   if (!require(cp,character.only = TRUE)){
     install.packages(cp)
