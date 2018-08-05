@@ -66,10 +66,6 @@ attr(all.neurons,"df") = df
 all.neurons[,"colour"] = sample(darjeeling(length(all.neurons)))
 all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
 
-
-
-
-
 # Selected columns to display
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")
 

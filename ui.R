@@ -204,6 +204,10 @@ tabPanel("data viewer",
                                            tabPanel("brain", imageOutput("MaximalProjection")),
                                            tabPanel("VNC", imageOutput("VNCMaximalProjection"))
                                )
+                      ),
+                      tabPanel("uniglomerular PN info",
+                          shiny::br(),
+                          dataTableOutput('PNINFO')        
                       )
                   )
           )

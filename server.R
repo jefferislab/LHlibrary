@@ -99,12 +99,12 @@ shinyServer(function(input, output, session) {
   output$imageGrid <- renderUI({
     fluidRow(
          lapply(1:length(vals$split_brain_images_chosen), function(i) {
-           column(3,
+           column(4,
              shiny::strong(sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i]),
              tags$button(
              id = sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i],
              class = "btn action-button",
-             tags$img(src = vals$split_brain_images_chosen[i],height = "313px",width="586px")
+             tags$img(src = vals$split_brain_images_chosen[i],height = "100%",width="100%")
            ))
          })
     )
@@ -1309,6 +1309,8 @@ shinyServer(function(input, output, session) {
   ########
   
   output$TRACTS <- renderDataTable(lhns::lh_tract_data)
+  
+  output$PNINFO <- renderDataTable(lhns::pn.info)
   
   ########
   # TEST #
