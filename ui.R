@@ -46,8 +46,10 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                   ),
                                                   #tags$head(tags$style(".modal-dialog{ width:923px}")), # Will this affect modals elsewhere in the app?
                                                   #tags$head(tags$style(".modal-body{ height:600px}")),
+                                                  tags$head(tags$style(HTML('.modal-lg { width: 923px;'))),
+                                                  tags$head(tags$style(HTML('.modal-lg { height: 750px;'))),
                                                   lapply(1:length(pnt_lhns), function(i) {
-                                                    shinyBS::bsModal(id = paste0("AG_modal_",pnt_lhns[i]), title = pnt_lhns[i], trigger = pnt_lhns[i], 
+                                                    shinyBS::bsModal(id = paste0("AG_modal_",pnt_lhns[i]), title = pnt_lhns[i], trigger = pnt_lhns[i], size = "large",
                                                                      slickR::slickROutput(paste0("Carousel",pnt_lhns[i]), width = 879, height = 469),
                                                                      br(),
                                                                      br(),
@@ -337,7 +339,7 @@ tabPanel("the lateral horn",
            shiny::br(),
            shiny::br(),
            shiny::fluidRow(
-             column(6,
+             column(5,
                     shiny::HTML("<i>The lateral horn of the fly is thought to be an insinct processing center, the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/'>Jefferis group</a> are interested in
                            the statistics of connectivity and convergence between its constituent neurons and how it helps mount
                            behavioural responses to innate, potentially multi-modal stimuli in the face of the fly's ever changing environment.</i>"),
@@ -413,7 +415,7 @@ tabPanel("the lateral horn",
                     shiny::br(),
                     shiny::HTML("<i>Diagram by Philipp Schlegel</i>")
                     ),
-             column(6,
+             column(7,
                     shiny::div(shiny::img(src='neuroanatomy.png', width="738px", height="434px"),align="center"),
                     shiny::br(),
                     shiny::br(),

@@ -54,12 +54,13 @@ shinyServer(function(input, output, session) {
     observeEvent(input[[lines[i]]], {
       showModal(modalDialog(
         title = lines[i],
+        size = "l",
         tabsetPanel(type = "tabs",
-                    tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "470px",width="879px",align = "center")),
-                    tabPanel("VNC", img(src = split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)],height = "470px",width="879px",align = "center"))
+                    tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "100%",width="100%",align = "center")),
+                    tabPanel("VNC", img(src = split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)],height = "100%",width="100%",align = "center"))
         ),
-        br(),
-        fluidRow(
+        shiny::br(),
+        shiny::fluidRow(
           column(3,
                  p(strong("cell.type: "),lhns::lh_line_info[lines[i],c("cell.type")]),
                  p(strong("type: "),lhns::lh_line_info[lines[i],c("type")])
@@ -508,7 +509,7 @@ shinyServer(function(input, output, session) {
       if(input$DownloadType=="neurons in table"){
         downloadskeletons(vals$neurons,dir = file,subdir = pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE)
       }else{
-        cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%dye.fills])
+        cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%rownames(lhns::lhn_odour_responses)])
         csv = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%cts,]
         write.csv(csv,file = file, row.names = TRUE)
       }

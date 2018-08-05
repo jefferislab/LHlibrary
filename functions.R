@@ -60,79 +60,11 @@ frontalView<-function(zoom=0.6){
 # Plot a selection of pnts
 plot_pnt <- function (pnts = "PD2") {
   plot.pnts = lhns::primary.neurite.tracts[pnts]
-  rgl::plot3d(plot.pnts, soma = T, lwd = 5, col = "darkgrey",skipRedraw = TRUE)
+  rgl::plot3d(plot.pnts, soma = T, lwd = 5, col = "grey90",skipRedraw = TRUE)
   pxyz = t(sapply(plot.pnts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
   rownames(pxyz) = gsub(pattern = "LH|lh", "", names(plot.pnts))
   shift <- matrix(c(-3, 3, 0), nrow(pxyz), 3, byrow = TRUE)
   rgl::text3d(pxyz + shift, texts = rownames(pxyz))
-}
-
-# Download skeletons and associated metadata
-downloadskeletons <- function (nl, dir, format = NULL, subdir = NULL, INDICES = names(nl), 
-                               files = NULL, Force = FALSE, ...) 
-{
-  if (grepl("\\.zip", dir)) {
-    zip_file = dir
-    if (file.exists(zip_file)) {
-      if (!Force) 
-        stop("Zip file: ", zip_file, "already exists")
-      unlink(zip_file)
-    }
-    zip_dir = tools::file_path_as_absolute(dirname(zip_file))
-    zip_file = file.path(zip_dir, basename(zip_file))
-    dir <- file.path(tempfile("user_neurons"))
-  }
-  else {
-    zip_file = NULL
-  }
-  if (!file.exists(dir)) 
-    dir.create(dir)
-  df = attr(nl, "df")
-  ee = substitute(subdir)
-  subdirs = NULL
-  if (!is.null(ee) && !is.character(ee)) {
-    if (!is.null(df)) 
-      df = df[INDICES, ]
-    subdirs = file.path(dir, eval(ee, df, parent.frame()))
-    names(subdirs) = INDICES
-  }
-  ff = substitute(files)
-  if (!is.null(ff)) {
-    if (!is.character(ff)) 
-      files = eval(ff, df, parent.frame())
-    if (is.null(names(files))) 
-      names(files) = INDICES
-  }
-  written = structure(rep("", length(INDICES)+1), .Names = c(INDICES,"metadata"))
-  for (nn in INDICES) {
-    n = nl[[nn]]
-    thisdir = dir
-    if (is.null(subdirs)) {
-      if (!is.null(subdir)) {
-        propval = n[[subdir]]
-        if (!is.null(propval)) 
-          thisdir = file.path(dir, propval)
-      }
-    }
-    else {
-      thisdir = subdirs[nn]
-    }
-    if (!file.exists(thisdir)) 
-      dir.create(thisdir, recursive = TRUE)
-    written[nn] = write.neuron(n, dir = thisdir, file = files[nn], 
-                               format = format, Force = Force)
-  }
-  # Save metadata
-  write.csv(df,file = paste0(dir,"/neurons_metadata.csv"),row.names = FALSE)
-  written["metadata"] = paste0(dir,"_metadata.csv")
-  if (!is.null(zip_file)) {
-    owd = setwd(dir)
-    on.exit(setwd(owd))
-    zip(zip_file, files = dir(dir, recursive = TRUE))
-    unlink(dir, recursive = TRUE)
-    written <- zip_file
-  }
-  invisible(written)
 }
 
 
@@ -225,7 +157,6 @@ shiny_catmaid_connection <-function (server, username = NULL, password = NULL, a
                                                                        conn$token)))
   invisible(conn)
 }
-
 
 vfb_url <- function(neuron_name, style=c("dev", "old")) {
   style=match.arg(style, c("dev", "old"))

@@ -2,8 +2,6 @@
 dps <- most.lhns.dps
 options(nat.default.neuronlist='most.lhns')
 
-
-
 # We will use this downsampled FCWB surface instead of the normal one
 FCWB.surf <- read.hxsurf("data/FCWB.smooth.surf")
 

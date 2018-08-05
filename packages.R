@@ -66,11 +66,9 @@ attr(all.neurons,"df") = df
 all.neurons[,"colour"] = sample(darjeeling(length(all.neurons)))
 all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
 
-# get dye filled skeletons that will have E-Phys data
-dye.fills = lhns::most.lhns[grepl("^1",names(lhns::most.lhns))]
-cells = paste0("nm20",names(dye.fills))
-cells = cells[cells%in%names(physplitdata::smSpikes)]
-dye.fills = dye.fills[cells%in%names(physplitdata::smSpikes)] # Final list of neurons for which there is e-phy data
+
+
+
 
 # Selected columns to display
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")
