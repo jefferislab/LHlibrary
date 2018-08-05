@@ -147,16 +147,18 @@ tabPanel("data viewer",
                    div(style="display:inline-block",checkboxInput(inputId=paste0("PNT",i), value=NULL, label = pnt_lhns[i]))
                  })
                 ),
-               br(),
+               shiny::br(),
                checkboxInput(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE),
-               hr(),
+               shiny::hr(),
                # Help text
                bsTooltip(id = "lbl_nt", title = "the broadest category for LH neurons", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_pnt", title = "tracts connect soma to neuropil", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_ns", title = "neuropils as defined in Ito et al. 2014", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_ds", title = "the dataset in which to search for neuron skeletons", placement = "right", trigger = "hover"),
                bsTooltip(id = "lbl_bm", title = "FCWB brain mesh made from FlyCircuit data", placement = "right", trigger = "hover"),
-               actionButton("Upload","upload tracing / CATMAID pull")
+               actionButton("Upload","upload tracing / CATMAID pull"),
+               shiny::hr(),
+               actionButton("DownloadAll","download all data")
              ),
         # Show a plot of the brain
         mainPanel(

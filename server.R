@@ -446,6 +446,40 @@ shinyServer(function(input, output, session) {
   # Download Data #
   #################
   
+  # Download all data
+  observeEvent(input$DownloadAll,{
+    showModal(modal_download_all)
+  })
+  
+  # Download data
+  modal_download_all <-modalDialog(
+    fluidPage(
+      h3(shiny::strong("download all data"),align="center"),
+      selectInput(inputId='DownloadAllType', label=NULL, choices = c("all morphologies","all odours response data"), selected = "all morphologies", multiple=FALSE, selectize=TRUE),
+      downloadButton("DownloadAllData", "download")
+    ),
+    easyClose = TRUE
+  )
+  
+  # Download all
+  output$DownloadAllData <- downloadHandler(
+    filename = function() {
+      if(input$DownloadAllType=="all morphologies"){
+        "LH_library.zip"
+      }else{
+        "LH_library_ephys.csv"
+      }
+    },
+    content = function(file) {
+      if(input$DownloadAllType=="all morphologies"){
+        lhns::download_mophologies(dir=file)
+      }else{
+        write.csv(lhns::lhn_odour_responses,file = file, row.names = TRUE)
+      }
+    },
+    contentType = "application/zip"
+  )
+  
   # Download skeletons in selection table
   observeEvent(input$Download,{
     showModal(modal_download)
@@ -754,6 +788,7 @@ shinyServer(function(input, output, session) {
   ####################
   # Upload a tracing #
   ####################
+
   
   # Upload a neuron tracing
   observeEvent(input$Upload,{
