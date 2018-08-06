@@ -815,7 +815,8 @@ shinyServer(function(input, output, session) {
                     choices = list(`FlyCircuit (FCWB)`= "FCWB",`Janelia FlyLight/VFB (JFRC2010/JFRC2)`= "JFRC2",`Janelia FlyLight (JFRC2013)`= "JFRC2013" ,`Cambridge (IS2)`= "IS2", `Vienna (T1)`= "T1",`Janelia EM (FAFB14)`= "FAFB14"),
                     selected =  list(`FlyCircuit (FCWB)`= "FCWB"),
                     multiple = FALSE,
-                    selectize = TRUE)
+                    selectize = TRUE),
+        shiny::HTML("Neurons will be bridged <a href='https://www.biorxiv.org/content/early/2014/06/19/006353'>(Manton et al. 2014)</a> from the selected template space into FCWB. Neurons that have not been registered to a template brain cannot be transformed to FCWB in this workflow.")
       ),
       conditionalPanel(condition = "input.TracingType == 'CATMAID'",
                        shiny::HTML("Upload a synaptic-resolution tracing using the CATMAID API, based on electron microscopy data.
@@ -1311,6 +1312,13 @@ shinyServer(function(input, output, session) {
   output$TRACTS <- renderDataTable(lhns::lh_tract_data)
   
   output$PNINFO <- renderDataTable(lhns::pn.info)
+  
+  output$PNCalicumResponses <- plotly::renderPlotly({
+    heatmaply::heatmaply(x = lhns::badel.PN.responses,  
+                         xlab = "glomeruli", ylab = "odours",
+                         colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
+                         margins = c(100,100,40,20))
+  })
   
   ########
   # TEST #

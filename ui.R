@@ -21,10 +21,14 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
             shiny::h3("the lateral horn library",align="left"),
             shiny::br(),
             shiny::HTML("Welcome to the <a href='https://en.wikipedia.org/wiki/Lateral_horn_of_insect_brain'>lateral horn</a> of the <a href='https://en.wikipedia.org/wiki/Drosophila_melanogaster'>vinegar fly</a> brain. In short, the lateral horn is a brain area in the insect that is thought to help generate innate behaviours in response to different odours.
-                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>.
-                        Neurons of the lateral horn are named by a hierarhcical classification system. They are each classified into a <strong>primary neurite cluster</strong>, <strong>anatomy group</strong>
+                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <strong>data viewer </strong>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>.
+                        Neurons of the lateral horn are named by a hierarchical classification system. They are each classified into a <strong>primary neurite cluster</strong>, <strong>anatomy group</strong>
                         and finally <strong>cell type</strong>. See the <strong>naming system</strong> tab for details. The <strong>data viewer</strong> tab lets you display these morphologies in 3D, access data on neurons' odour responses and
                         search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Dolan et al. 2018</a>."),
+            shiny::br(),
+            shiny::br(),
+            shiny::HTML("The data presented on this site originate primarily from four different sources cited in our <strog>about</strong> section.
+                        <strong>Split-GAL4</strong> lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi'>here</a>."),
             shiny::br(),
             shiny::br(),
             shiny::HTML("Below, you can click on the primary neurite clusters below to see their constituent anatomy groups and cell types. You can also choose to view the split-GAL4 line collection for
@@ -208,6 +212,11 @@ tabPanel("data viewer",
                       tabPanel("uniglomerular PN info",
                           shiny::br(),
                           dataTableOutput('PNINFO')        
+                      ),
+                      tabPanel("uniglomerular PN responses",
+                               plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
+                               shiny::br(),
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")      
                       )
                   )
           )
@@ -460,16 +469,15 @@ tabPanel("the lateral horn",
           shiny::HTML("We have developed a <a href='https://github.com/jefferislab'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
                       Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/'>here</a>."),
           shiny::br(),
-          shiny::div(shiny::HTML('<iframe width="420" height="345" src="https://www.youtube.com/watch?v=tyg6kbixuaM" frameborder="0" allowfullscreen></iframe>'),align="center"),
+          shiny::div(shiny::HTML('<iframe width="420px" height="345px" src="https://www.youtube.com/watch?v=tyg6kbixuaM" frameborder="0" allowfullscreen></iframe>'),align="center"),
           h3("Source code"),
           shiny::HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab'>GitHub</a>."),
           h3("Preparing own data"),
           shiny::HTML("Protocols for <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071720.full'>immunostaining and imaging fly brains</a>, as well as <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071738.full'>registration of the resulting images</a> are available from Cold Spring Harbor Protocols.
                       We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions'>here</a>.
                       In order to see single cell morphologies in genetic lines that label multiple neurons per brain, <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/'>MultiColor FlpOut (MCFO)</a> is recommended."),
-          h3("Contact us"),
-          shiny::HTML("If you require more information about this work, please contact <a href='https://www.linkedin.com/in/alex-bates-22a265a7/'>Alex Bates</a> at <strong>ab2248[at]cam.ac.uk</strong> or <a href='https://www2.mrc-lmb.cam.ac.uk/group-leaders/h-to-m/gregory-jefferis/'>Gregory Jefferis</a> at <strong>jefferis[at]mrc-lmb.cam.ac.uk</strong>"
-          ),
+          h3("Split-GAL4 lines"),
+          shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi'>here</a>"),
           h3("Data sources"),
           shiny::br(),          
           shiny::HTML("<strong>1.</strong> Frechter, S., Bates, A.S., Tootoonian, S., Dolan, M.-J., Manton, J.D., Jamasb, A., Kohl, J., Bock, D., and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
@@ -480,7 +488,7 @@ tabPanel("the lateral horn",
                       <i>[split-GAL4 lines for lateral horn neurons, cell type segmentations from confical stack data and single cell <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/'>MCFO</a> skeletons]</i>"),
           shiny::br(),
           shiny::br(),
-          shiny::HTML("<strong>3.</strong>Jeanne, J.M., Fişek, M., and Wilson, R.I. (2018). The Organization of Projections from Olfactory Glomeruli onto Higher-Order Neurons. Neuron.
+          shiny::HTML("<strong>3.</strong> Jeanne, J.M., Fişek, M., and Wilson, R.I. (2018). The Organization of Projections from Olfactory Glomeruli onto Higher-Order Neurons. Neuron.
                       <i>[some dye fill morphologies, paper reports functional olfactory PN->LH neuron connectivity]</i>"),
           shiny::br(),
           shiny::br(),          
@@ -490,6 +498,9 @@ tabPanel("the lateral horn",
           shiny::br(),
           shiny::br(),
           shiny::HTML("<i>Note: You can cite this Web app by citing Frechter et al. and in addition the relevant publications from which the data you wish to mention originate, e.g. Chiang et al. 2012 for FlyCircuit skeletons.</i>"),
+          h3("Contact us"),
+          shiny::HTML("If you require more information about this work, please contact <a href='https://www.linkedin.com/in/alex-bates-22a265a7/'>Alex Bates</a> at <strong>ab2248[at]cam.ac.uk</strong> or <a href='https://www2.mrc-lmb.cam.ac.uk/group-leaders/h-to-m/gregory-jefferis/'>Gregory Jefferis</a> at <strong>jefferis[at]mrc-lmb.cam.ac.uk</strong>"
+          ),
           h3("Acknowledgements"),
           shiny::HTML("This Shiny App was built by Alex Bates, in part based on code by <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/'>James Manton</a>.
                       It relies on light-level data collected by Gregory Jefferis, Shahar Frechter, Michael-John Dolan (along with the FlyLight team at Janelia Research Campus), Ann-Shyn Chiang's group, Mehmet Fisek and Jamie Jeanne and collated by Alex Bates, 

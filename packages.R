@@ -16,9 +16,9 @@ library(colourpicker)
 library(formattable)
 library(packrat)
 library(lhns)
+library(heatmaply)
 library(wesanderson)
 library(data.table)
-library(ggplot2)
 library(DT)
 
 # Load some functions we might need

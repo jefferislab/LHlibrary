@@ -13,7 +13,7 @@ for(cp in cran.packages){
 
 # Not from CRAN
 library(devtools)
-github.packages = c("karthik/wesanderson","jefferislab/elmr","jefferislab/lhns","alexanderbates/catnat","jefferis/flycircuit","jefferis/vfbr")
+github.packages = c("karthik/wesanderson","jefferislab/elmr","jefferislab/lhns","alexanderbates/catnat","jefferis/flycircuit","jefferis/vfbr",'hadley/ggplot2')
 for(gp in github.packages){
   if (!require(gp,character.only = TRUE)){
     devtools::install_github(gp, dependencies=TRUE)
