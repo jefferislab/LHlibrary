@@ -246,7 +246,7 @@ downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES =
 
 download_all_mophologies <- function(dir = paste0(getwd(),"/"),...){
   file = paste0(dir,"LH_library.zip")
-  all.neurons = subset(all.lh.neurons,skeleton.type%in%c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"))
+  all.neurons = subset(lhlite::all.lh.neurons,skeleton.type%in%c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"))
   most.lhins.pnt = subset(all.neurons,type=="PN")
   most.lhins.pnt[,"pnt"] = most.lhins.pnt[,"tract"]
   neurons = c(subset(all.neurons,type!="PN"),most.lhins.pnt)
@@ -255,3 +255,12 @@ download_all_mophologies <- function(dir = paste0(getwd(),"/"),...){
   downloadskeletons(neurons,dir = file,subdir = skeleton.type_pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE, ...)
 }
 
+
+resamplecatmaidneuron <- function (x, stepsize = 1, ...) {
+  r = nat:::resample.neuron(x, stepsize = stepsize, ...)
+  c = catmaid::connectors(x)
+  c$treenode_id = nabor::knn(data = nat::xyzmatrix(r), query = nat::xyzmatrix(c), 
+                             k = 1)$nn.idx
+  r$connectors = c
+  r
+}
