@@ -177,3 +177,81 @@ is_lhn_type <- function(type){
   sum(sapply(c("^ON","^LN","^LHN"),grepl,type))>0
 }
 
+
+downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES = names(nl), files = NULL, Force = FALSE, ...){
+  if (grepl("\\.zip", dir)) {
+    zip_file = dir
+    if (file.exists(zip_file)) {
+      if (!Force)
+        stop("Zip file: ", zip_file, "already exists")
+      unlink(zip_file)
+    }
+    zip_dir = tools::file_path_as_absolute(dirname(zip_file))
+    zip_file = file.path(zip_dir, basename(zip_file))
+    dir <- file.path(tempfile("user_neurons"))
+  } else {
+    zip_file = NULL
+  }
+  if (!file.exists(dir)){
+    dir.create(dir)
+  }
+  df = attr(nl, "df")
+  ee = substitute(subdir)
+  subdirs = NULL
+  if (!is.null(ee) && !is.character(ee)) {
+    if (!is.null(df))
+      df = df[INDICES, ]
+    subdirs = file.path(dir, eval(ee, df, parent.frame()))
+    names(subdirs) = INDICES
+  }
+  ff = substitute(files)
+  if (!is.null(ff)) {
+    if (!is.character(ff))
+      files = eval(ff, df, parent.frame())
+    if (is.null(names(files)))
+      names(files) = INDICES
+  }
+  written = structure(rep("", length(INDICES)+1), .Names = c(INDICES,"metadata"))
+  for (nn in INDICES) {
+    n = nl[[nn]]
+    thisdir = dir
+    if (is.null(subdirs)) {
+      if (!is.null(subdir)) {
+        propval = n[[subdir]]
+        if (!is.null(propval))
+          thisdir = file.path(dir, propval)
+      }
+    }
+    else {
+      thisdir = subdirs[nn]
+    }
+    if (!file.exists(thisdir))
+      dir.create(thisdir, recursive = TRUE)
+    written[nn] = nat::write.neuron(n, dir = thisdir, file = files[nn],
+                                    format = format, Force = Force)
+  }
+  # Save metadata
+  utils::write.csv(df,file = paste0(dir,"/neurons_metadata.csv"),row.names = FALSE)
+  written["metadata"] = paste0(dir,"_metadata.csv")
+  if (!is.null(zip_file)) {
+    owd = setwd(dir)
+    on.exit(setwd(owd))
+    zip(zip_file, files = dir(dir, recursive = TRUE))
+    unlink(dir, recursive = TRUE)
+    written <- zip_file
+  }
+  invisible(written)
+}
+
+
+download_all_mophologies <- function(dir = paste0(getwd(),"/"),...){
+  file = paste0(dir,"LH_library.zip")
+  all.neurons = subset(all.lh.neurons,skeleton.type%in%c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"))
+  most.lhins.pnt = subset(all.neurons,type=="PN")
+  most.lhins.pnt[,"pnt"] = most.lhins.pnt[,"tract"]
+  neurons = c(subset(all.neurons,type!="PN"),most.lhins.pnt)
+  attr(neurons,"df") = neurons[,c("cell.type", "anatomy.group", "pnt", "tract","type", "skeleton.type", "coreLH", "id")]
+  neurons[,"skeleton.type_pnt"] = paste0(neurons[,"skeleton.type"],"_",neurons[,"pnt"])
+  downloadskeletons(neurons,dir = file,subdir = skeleton.type_pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE, ...)
+}
+

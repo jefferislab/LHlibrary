@@ -9,20 +9,13 @@ library(shinythemes)
 library(shinydashboard)
 library(slickR)
 library(elmr)
-library(catnat)
-library(flycircuit)
 library(plotly)
 library(colourpicker)
-library(formattable)
-library(packrat)
 library(lhns)
 library(heatmaply)
 library(wesanderson)
 library(data.table)
 library(DT)
-
-# Load some functions we might need
-source("helper.R")
 
 # Set colours
 united.orange = "#E64A1E"
@@ -65,6 +58,8 @@ attr(all.neurons,"df") = df
 # Set starting colours
 all.neurons[,"colour"] = sample(darjeeling(length(all.neurons)))
 all.neurons.dps[,"colour"] = sample(darjeeling(length(all.neurons.dps)))
+
+
 
 # Selected columns to display
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")

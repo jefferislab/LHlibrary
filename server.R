@@ -4,7 +4,7 @@
 # http://shiny.rstudio.com
 
 # Load the packages we need for this App
-source("packages.R")
+source("init.R")
 source("functions.R")
 
 
@@ -255,7 +255,7 @@ shinyServer(function(input, output, session) {
     # Plot PNTs if selected
     pnts_to_plot = c(input$PNT1,input$PNT2,input$PNT3,input$PNT4,input$PNT5,input$PNT6,input$PNT7,input$PNT8,input$PNT9,input$PNT10,
                      input$PNT11,input$PNT12,input$PNT13,input$PNT14,input$PNT15,input$PNT16,input$PNT17,input$PNT18,input$PNT19,input$PNT20,
-                     input$PNT21,input$PNT22,input$PNT23,input$PNT24,input$PNT25,input$PNT26,input$PNT27,input$PNT28,input$PNT29,input$PNT30)
+                     input$PNT21,input$PNT22,input$PNT23,input$PNT24,input$PNT25,input$PNT26,input$PNT27,input$PNT28,input$PNT29,input$PNT30,input$PNT31)
     if(sum(pnts_to_plot)>0){
       plot_pnt(pnts_to_plot) 
     }
@@ -278,7 +278,6 @@ shinyServer(function(input, output, session) {
                    shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
                    actionButton(inputId = "Col_row_head",label = "recolour selected"),
-                   actionButton(inputId = "Compare_row_head",label = "see axon-dendrite split for selected"),
                    actionButton(inputId = "Download",label = "download data"),
                    shiny::HTML('</div>')
             ),
@@ -333,41 +332,6 @@ shinyServer(function(input, output, session) {
     vals$neuronsDF = vals$neuronsDF[-row_to_del] # Update dynamic object
     vals$neurons = vals$neurons[-row_to_del] # Update dynamic object
   })
-  
-  ###################################
-  # Compare Selected Neurons in Table #
-  ###################################
-  
-  # Select neurons from table to compare 
-  observeEvent(input$Compare_row_head,{
-    row_to_del=as.numeric(gsub("Row","",input$checked_rows)) # Here 'row_to_del' is actually the selected rows
-    vals$Comparison$neurons = vals$neurons[row_to_del] # Use this in compare_neurons_modal
-    #dput(names(vals$Comparison$neurons))
-    showModal(compare_neurons_modal)
-  }
-  )
-  
-  # Compare neurons selected in table
-  compare_neurons_modal<-modalDialog(
-    shiny::h3(shiny::strong("selected neurons"),align="center"),
-    shiny::fluidPage(
-      #shiny::plotOutput("compare_neurons_plot"),
-      #shiny::tableOutput("compare_neurons_table")
-    )
-  )
-  
-  compare_neurons_plot <- shiny::renderPlot({
-    row_to_del=as.numeric(gsub("Row","",input$checked_rows)) # Here 'row_to_del' is actually the selected rows
-    dput(names(vals$neurons[row_to_del]))
-    plot(vals$neurons[row_to_del])
-  })
-  
-  compare_neurons_table <- shiny::renderTable({
-    row_to_del=as.numeric(gsub("Row","",input$checked_rows)) 
-    vals$neurons[row_to_del][,]
-  })
-  
-  
   
   ########################
   # Modify Colours Table #
@@ -473,9 +437,9 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       if(input$DownloadAllType=="all morphologies"){
-        lhns::download_mophologies(dir=file)
+        download_all_mophologies(dir=file)
       }else{
-        write.csv(lhns::lhn_odour_responses,file = file, row.names = TRUE)
+        utils::write.csv(lhns::lhn_odour_responses,file = file, row.names = TRUE)
       }
     },
     contentType = "application/zip"
@@ -1309,31 +1273,22 @@ shinyServer(function(input, output, session) {
   # MISC #
   ########
   
-  output$TRACTS <- renderDataTable(lhns::lh_tract_data)
+  output$TRACTS <- renderTable(lhns::lh_tract_data)
   
-  output$PNINFO <- renderDataTable(lhns::pn.info)
+  output$PNINFO <- renderTable(lhns::pn.info)
   
   output$PNCalicumResponses <- plotly::renderPlotly({
-    heatmaply::heatmaply(x = lhns::badel.PN.responses,  
-                         xlab = "glomeruli", ylab = "odours",
-                         colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
-                         margins = c(100,100,40,20))
-  })
-  
-  ########
-  # TEST #
-  ########
-  
-  output$Test = renderPrint({
-    #str(vals$CATMAID)
-    s =  is_lhn_type(input$Type)
-    # if(length(s)>0){
-    #   s = update_neurons(input=input,db=s)
-    # }
-    #if (length(s)) {
-    cat(s, sep = ', ')
-    #}
-  })
+     heatmaply::heatmaply(x = signif(lhns::badel.PN.responses,digits=2),
+                          xlab = "glomeruli", ylab = "odours",
+                          colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
+                          margins = c(100,100,40,20))
+   })
 
+   output$Overlap <- plotly::renderPlotly({
+     heatmaply::heatmaply(x = lhns::lhns.pn.overlap.matrix,
+                          xlab = "glomeruli", ylab = "odours",
+                          colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
+                          margins = c(100,100,40,20))
+  })
 
 })

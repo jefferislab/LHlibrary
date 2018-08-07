@@ -5,7 +5,7 @@
 # http://shiny.rstudio.com
 
 # Load the packages we need for this App
-source("packages.R")
+source("init.R")
 source("functions.R")
 
 shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
@@ -27,7 +27,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                         search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Dolan et al. 2018</a>."),
             shiny::br(),
             shiny::br(),
-            shiny::HTML("The data presented on this site originate primarily from four different sources cited in our <strog>about</strong> section.
+            shiny::HTML("The data presented on this site originate primarily from five different sources cited in our <strog>about</strong> section.
                         <strong>Split-GAL4</strong> lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi'>here</a>."),
             shiny::br(),
             shiny::br(),
@@ -174,8 +174,9 @@ tabPanel("data viewer",
           # Output: Tabset
           tabsetPanel(type = "tabs",
                       tabPanel("3D",
-                                 rglwidgetOutput("plot3D", width="1200px", height="700px"),
-                                 uiOutput("MainTable")),
+                              rgl::rglwidgetOutput("plot3D", width="1200px", height="700px"),
+                              uiOutput("MainTable")
+                      ),
                       tabPanel("odour responses",
                                  br(),
                                  uiOutput("ChooseCTs"),
@@ -185,7 +186,7 @@ tabPanel("data viewer",
                                  shiny::br(),
                                  shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
                                              See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> for details.</i>")
-                              ),
+                      ),
                       tabPanel("odour search",
                                br(),
                                uiOutput("ChooseOdours"),
@@ -211,12 +212,21 @@ tabPanel("data viewer",
                       ),
                       tabPanel("uniglomerular PN info",
                           shiny::br(),
-                          dataTableOutput('PNINFO')        
+                          shiny::tableOutput('PNINFO'),
+                          tags$head(tags$style("#PNINFO table {background-color: white; }", media="screen", type="text/css")),
+                          shiny::HTML("<i>Information in table primarily collated by Paavo Huoviala and Marta Costa</i>"),
+                          shiny::br()
                       ),
                       tabPanel("uniglomerular PN responses",
-                               plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
                                shiny::br(),
-                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")      
+                               plotly::plotlyOutput("PNCalicumResponses", width = "1000px", height = "1000px"),
+                               shiny::br(),
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")
+                      ),
+                      tabPanel("predicted connectivity",
+                               #plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
+                               shiny::br(),
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")
                       )
                   )
           )
@@ -329,7 +339,7 @@ tabPanel("naming system",
           ),
           shiny::br(),
           shiny::br(),
-          dataTableOutput('TRACTS'),
+          shiny::tableOutput('TRACTS'),
           shiny::br(),
           shiny::br(),
           shiny::HTML("<i>Text based on Frechter et al. 2018 and Dolan et al. 2018</i>"), 
@@ -467,7 +477,8 @@ tabPanel("the lateral horn",
                       ),
           h3("R tools"),
           shiny::HTML("We have developed a <a href='https://github.com/jefferislab'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
-                      Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/'>here</a>."),
+                      Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/'>here</a>. 
+                      You can also use NBLAST with data from <a href='http://www.flycircuit.tw/'>FlyCircuit</a> without needed to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/'>NBLAST-on-the-fly</a> by James Manton."),
           shiny::br(),
           shiny::div(shiny::HTML('<iframe width="420px" height="345px" src="https://www.youtube.com/watch?v=tyg6kbixuaM" frameborder="0" allowfullscreen></iframe>'),align="center"),
           h3("Source code"),
@@ -497,7 +508,12 @@ tabPanel("the lateral horn",
           
           shiny::br(),
           shiny::br(),
-          shiny::HTML("<i>Note: You can cite this Web app by citing Frechter et al. and in addition the relevant publications from which the data you wish to mention originate, e.g. Chiang et al. 2012 for FlyCircuit skeletons.</i>"),
+          shiny::HTML("<strong>5.</strong> Badel, L., Ohta, K., Tsuchimoto, Y., and Kazama, H. (2016). Decoding of context-dependent olfactory behavior in Drosophila. Neuron.<i>
+                      [Calcium imaging of PN dendrites in response to odours</i>"),
+          
+          shiny::br(),
+          shiny::br(),
+          shiny::HTML("<i>Note: You can cite this Web app by citing Frechter et al. and in addition the relevant publications from which the data you wish to mention originate, e.g. Chiang et al. 2011 for FlyCircuit skeletons.</i>"),
           h3("Contact us"),
           shiny::HTML("If you require more information about this work, please contact <a href='https://www.linkedin.com/in/alex-bates-22a265a7/'>Alex Bates</a> at <strong>ab2248[at]cam.ac.uk</strong> or <a href='https://www2.mrc-lmb.cam.ac.uk/group-leaders/h-to-m/gregory-jefferis/'>Gregory Jefferis</a> at <strong>jefferis[at]mrc-lmb.cam.ac.uk</strong>"
           ),
