@@ -59,7 +59,7 @@ frontalView<-function(zoom=0.6){
 
 # Plot a selection of pnts
 plot_pnt <- function (pnts = "PD2") {
-  plot.pnts = lhns::primary.neurite.tracts[pnts]
+  plot.pnts = lhlite::primary.neurite.tracts[pnts]
   rgl::plot3d(plot.pnts, soma = T, lwd = 5, col = "grey90",skipRedraw = TRUE)
   pxyz = t(sapply(plot.pnts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
   rownames(pxyz) = gsub(pattern = "LH|lh", "", names(plot.pnts))

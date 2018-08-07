@@ -112,7 +112,7 @@ tabPanel("data viewer",
                icon(">>"), # We seem to need this line for the question bubbles to appear, for some reason?
                shiny::HTML("Enter the instinct centre of the vinegar fly, <i>Drosophila melanogaster</i>"),
                hr(),
-               selectInput(inputId='SkeletonType', label='dataset:'%>%label.help("lbl_ds"), choices = sort(unique(all.neurons[,"skeleton.type"])), selected = sort(unique(all.neurons[,"skeleton.type"])), multiple=TRUE, selectize=TRUE),
+               selectInput(inputId='SkeletonType', label='dataset:'%>%label.help("lbl_ds"), choices = sort(unique(all.lh.neurons[,"skeleton.type"])), selected = sort(unique(all.lh.neurons[,"skeleton.type"])), multiple=TRUE, selectize=TRUE),
                hr(),
                selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = list(`example (FlyCircuit PD2a1)`="example",`LH ouput neurons`= "ON",`LH local neurons`= "LN",`LH input neurons`= "IN", `MBONs`= "MBON"), selected = list(`example (PD2a1)`="example"), multiple=FALSE, selectize=TRUE),
                hr(),
@@ -222,12 +222,13 @@ tabPanel("data viewer",
                                plotly::plotlyOutput("PNCalicumResponses", width = "1000px", height = "1000px"),
                                shiny::br(),
                                shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")
-                      ),
-                      tabPanel("predicted connectivity",
-                               #plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
-                               shiny::br(),
-                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")
                       )
+                      # tabPanel("predicted connectivity",
+                      #          plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
+                      #          shiny::br(),
+                      #          shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and 
+                      #                      normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>")
+                      # )
                   )
           )
        )

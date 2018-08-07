@@ -19,8 +19,8 @@ shinyServer(function(input, output, session) {
   vals <- reactiveValues()
   vals$zoom = 0.4 # Zoom onto brain
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
-  vals$neurons <- subset(all.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
-  vals$neuronsDF <- data.table::data.table(subset(all.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
+  vals$neurons <- subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
+  vals$neuronsDF <- data.table::data.table(subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
   vals$split_brain_images_chosen = split_brain_images
@@ -62,20 +62,20 @@ shinyServer(function(input, output, session) {
         shiny::br(),
         shiny::fluidRow(
           column(3,
-                 p(strong("cell.type: "),lhns::lh_line_info[lines[i],c("cell.type")]),
-                 p(strong("type: "),lhns::lh_line_info[lines[i],c("type")])
+                 p(strong("cell.type: "),lhlite::lh_line_info[lines[i],c("cell.type")]),
+                 p(strong("type: "),lhlite::lh_line_info[lines[i],c("type")])
                  ),
           column(3,
-                 p(strong("neurotransmitter: "),lhns::lh_line_info[lines[i],c("neurotransmitter")]),
-                 p(strong("MCFO available: "),lhns::lh_line_info[lines[i],c("MCFO")])
+                 p(strong("neurotransmitter: "),lhlite::lh_line_info[lines[i],c("neurotransmitter")]),
+                 p(strong("MCFO available: "),lhlite::lh_line_info[lines[i],c("MCFO")])
           ),
           column(3,
-                 p(strong("AD: "),lhns::lh_line_info[lines[i],c("AD")]),
-                 p(strong("DBD: "),lhns::lh_line_info[lines[i],c("DBD")])
+                 p(strong("AD: "),lhlite::lh_line_info[lines[i],c("AD")]),
+                 p(strong("DBD: "),lhlite::lh_line_info[lines[i],c("DBD")])
           ),
           column(3,
-                 p(strong("stablestock available: "),lhns::lh_line_info[lines[i],c("stablestock")]),
-                 p(strong("VNC expression: "),lhns::lh_line_info[lines[i],c("VNC")])
+                 p(strong("stablestock available: "),lhlite::lh_line_info[lines[i],c("stablestock")]),
+                 p(strong("VNC expression: "),lhlite::lh_line_info[lines[i],c("VNC")])
           )
         ),
         easyClose = TRUE
@@ -87,11 +87,11 @@ shinyServer(function(input, output, session) {
                input$splitNT},{
                vals$split_brain_images_chosen = split_brain_images
                if(input$splittype!="all"){
-                 lines_chosen = unique(as.character(subset(lhns::lh_line_info[lines,],grepl(input$splittype,type))$linecode))
+                 lines_chosen = unique(as.character(subset(lhlite::lh_line_info[lines,],grepl(input$splittype,type))$linecode))
                  vals$split_brain_images_chosen = vals$split_brain_images_chosen[as.logical(rowSums(sapply(lines_chosen,function(x) grepl(paste0(x,".jpg"),vals$split_brain_images_chosen))))]
                }
                if(input$splitNT!="all"){
-                 lines_chosen = unique(as.character(subset(lhns::lh_line_info[lines,],grepl(input$splitNT,neurotransmitter))$linecode))
+                 lines_chosen = unique(as.character(subset(lhlite::lh_line_info[lines,],grepl(input$splitNT,neurotransmitter))$linecode))
                  vals$split_brain_images_chosen = vals$split_brain_images_chosen[as.logical(rowSums(sapply(lines_chosen,function(x) grepl(paste0(x,".jpg"),vals$split_brain_images_chosen))))]
                }
   })
@@ -119,7 +119,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$Append, {
     original = vals$neurons
     # Add neurons
-    selected = get_neurons(input=input,db=all.neurons)
+    selected = get_neurons(input=input,db=all.lh.neurons)
     if("neuronlist"%in%class(selected)&length(selected)>0){ # Prevent neurons of the same name being added together
       newneurons = selected[!names(selected)%in%names(original)]
       # Neurons are deleted from the selection via an observe app below
@@ -141,7 +141,7 @@ shinyServer(function(input, output, session) {
   # Dynamically update LHN selection, depending on which data type is picked 
   output$LHNselection <- renderUI({
     if(input$Type%in%c("ON","LN","IN","MBON","LHN")){
-      LHN_choices =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
+      LHN_choices =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
       selectInput("lhns", label = paste0("cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
@@ -149,7 +149,7 @@ shinyServer(function(input, output, session) {
   # Dynamically update PNT selection, depending on which data type is picked 
   output$PNTselection <- renderUI({
     if(is_lhn_type(input$Type)){
-      PNT_all =  sort(unique(subset(all.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
+      PNT_all =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
       PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^AD",PNT_all)],`Anterior ventral`=PNT_all[grepl("^AV",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PD",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PV",PNT_all)])
       PNT_choices = c(PNT_choices, list(`Other`= c(PNT_all[!PNT_all%in%unlist(PNT_choices)])))
       selectInput("PNT", label = paste0("primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
@@ -159,7 +159,7 @@ shinyServer(function(input, output, session) {
   # Dynamically update AG selection, depending on which PNTs are picked 
   output$AGselection <- renderUI({
     if(is_lhn_type(input$Type)){
-      AG_choices =  sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"anatomy.group"]))
+      AG_choices =  sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"anatomy.group"]))
       selectInput("AG", label = paste0("anatomy groups (",length(AG_choices),") :"), choices = c("all in selected primary neurite tracts",AG_choices),selected = "all in selected primary neurite tracts", multiple=TRUE, selectize=TRUE)
     }
   })
@@ -168,9 +168,9 @@ shinyServer(function(input, output, session) {
   output$CTselection <- renderUI({
     if(is_lhn_type(input$Type)){
       if("all in selected primary neurite tracts"%in%input$AG){
-        CT_choices = sort(unique(subset(all.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
+        CT_choices = sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
       }else{
-        CT_choices = sort(unique(subset(all.neurons[,],anatomy.group%in%input$AG&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
+        CT_choices = sort(unique(subset(all.lh.neurons[,],anatomy.group%in%input$AG&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
       }
       selectInput("CT", label = paste0("cell types (",length(CT_choices),") :"), choices = c("all in selected anatomy groups",CT_choices), selected = "all in selected anatomy groups", multiple=TRUE, selectize=TRUE)
     }
@@ -180,7 +180,7 @@ shinyServer(function(input, output, session) {
   output$MBONselection <- renderUI({
     if(!is_lhn_type(input$Type)){
       if(grepl("MBON",input$Type)){
-        MBON_choices = sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("MBON",type))[,"cell.type"]))
+        MBON_choices = sort(unique(subset(all.lh.neurons[,],skeleton.type%in%input$SkeletonType&grepl("MBON",type))[,"cell.type"]))
         selectInput("MBON", label = paste0("MBON types (",length(MBON_choices),") :"), choices = MBON_choices, selected = MBON_choices[1], multiple=TRUE, selectize=TRUE)
       }
     }
@@ -191,7 +191,7 @@ shinyServer(function(input, output, session) {
   output$PNtype <- renderUI({
     if(!is_lhn_type(input$Type)){
       if(grepl("IN",input$Type)){
-        input_all = sort(as.character(sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type))[,"anatomy.group"]))))
+        input_all = sort(as.character(sort(unique(subset(all.lh.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type))[,"anatomy.group"]))))
         input_choices = list(`medial antennal lobe tract (mALT)`= input_all[grepl("AL-mALT",input_all )], 
                              `mediolateral antennal lobe tract (mlALT)`= input_all[grepl("AL-mlALT",input_all )],
                              `lateral antennal lobe tract (lALT)`= input_all[grepl("AL-lALT",input_all )],
@@ -211,7 +211,7 @@ shinyServer(function(input, output, session) {
   output$PNselection <- renderUI({
     if(!is_lhn_type(input$Type)){
       if(grepl("IN",input$Type)){
-        input_all = sort(as.character(sort(unique(subset(all.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type)&anatomy.group%in%input$PNtype)[,"cell.type"]))))
+        input_all = sort(as.character(sort(unique(subset(all.lh.neurons[,],skeleton.type%in%input$SkeletonType&grepl("IN",type)&anatomy.group%in%input$PNtype)[,"cell.type"]))))
         input_choices = list(`medial antennal lobe tract (mALT)`= input_all[grepl("AL-mALT",input_all )], 
                              `mediolateral antennal lobe tract (mlALT)`= input_all[grepl("AL-mlALT",input_all )],
                              `lateral antennal lobe tract (lALT)`= input_all[grepl("AL-lALT",input_all )],
@@ -237,7 +237,7 @@ shinyServer(function(input, output, session) {
     rgl::clear3d()
     # Plot brain
     if(input$BrainMesh){
-      rgl::plot3d(FCWB, alpha = 0.1,skipRedraw = TRUE)
+      rgl::plot3d(FCWBsmooth, alpha = 0.1,skipRedraw = TRUE)
     }
     if(length(input$neuropils)>0){
       if("all neuropils"%in%input$neuropils) {
@@ -439,7 +439,7 @@ shinyServer(function(input, output, session) {
       if(input$DownloadAllType=="all morphologies"){
         download_all_mophologies(dir=file)
       }else{
-        utils::write.csv(lhns::lhn_odour_responses,file = file, row.names = TRUE)
+        utils::write.csv(lhlite::lhn_odour_responses,file = file, row.names = TRUE)
       }
     },
     contentType = "application/zip"
@@ -473,8 +473,8 @@ shinyServer(function(input, output, session) {
       if(input$DownloadType=="neurons in table"){
         downloadskeletons(vals$neurons,dir = file,subdir = pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE)
       }else{
-        cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%rownames(lhns::lhn_odour_responses)])
-        csv = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%cts,]
+        cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%rownames(lhlite::lhn_odour_responses)])
+        csv = lhlite::lhn_odour_responses[rownames(lhlite::lhn_odour_responses)%in%cts,]
         write.csv(csv,file = file, row.names = TRUE)
       }
     },
@@ -487,7 +487,7 @@ shinyServer(function(input, output, session) {
   
   # Choose cell types for E-Phys plot 
   output$ChooseCTs <- renderUI({
-    ct_choices = sort(unique(rownames(lhns::lhn_odour_responses)))
+    ct_choices = sort(unique(rownames(lhlite::lhn_odour_responses)))
     ct_choices = ct_choices[!ct_choices%in%c("notLHproper")] # Get rid of uncertain LHNs
     if(length(input$SelectionTable_rows_selected)>1){
       cts = sort(unique(vals$neurons[,"cell.type"][-input$SelectionTable_rows_selected]))
@@ -501,17 +501,17 @@ shinyServer(function(input, output, session) {
   
   # Choose odours for which to plot cell type responses
   output$ChooseOdours <- renderUI({
-    Odour_choices = unname(colnames(lhns::lhn_odour_responses))
+    Odour_choices = unname(colnames(lhlite::lhn_odour_responses))
     selectInput("OdourSelection", label = paste0("choose odour (",length(Odour_choices),") :"), choices = Odour_choices, selected = "Vinegar mimic", multiple=TRUE, selectize=TRUE)
   })
   
   # A plotly graph for the E-Phys data as tuning curves
   output$Ephys <- plotly::renderPlotly({
     if(is.null(input$EphysSelection)){
-      data = rep(0,ncol(lhns::lhn_odour_responses)) # lhns::lhn_odour_responses is a matrix
-      names(data) = colnames(lhns::lhn_odour_responses)
+      data = rep(0,ncol(lhlite::lhn_odour_responses)) # lhlite::lhn_odour_responses is a matrix
+      names(data) = colnames(lhlite::lhn_odour_responses)
     }else{
-      data = lhns::lhn_odour_responses[rownames(lhns::lhn_odour_responses)%in%input$EphysSelection,]
+      data = lhlite::lhn_odour_responses[rownames(lhlite::lhn_odour_responses)%in%input$EphysSelection,]
       if(is.null(nrow(data))) { # If there is only one skeleton...
         data = t(as.matrix(data))
         rownames(data) = input$EphysSelection
@@ -631,10 +631,10 @@ shinyServer(function(input, output, session) {
   # A plotly graph for the E-Phys data as tuning curves
   output$OdoursResponses <- plotly::renderPlotly({
     if(is.null(input$OdourSelection)){ # If no odours are selected
-      data = t(as.matrix(rep(0,nrow(lhns::lhn_odour_responses))))
-      colnames(data) = rownames(lhns::lhn_odour_responses)
+      data = t(as.matrix(rep(0,nrow(lhlite::lhn_odour_responses))))
+      colnames(data) = rownames(lhlite::lhn_odour_responses)
     }else{ # A set of multiple odours
-      data = t(lhns::lhn_odour_responses[,colnames(lhns::lhn_odour_responses)%in%input$OdourSelection])
+      data = t(lhlite::lhn_odour_responses[,colnames(lhlite::lhn_odour_responses)%in%input$OdourSelection])
     }
     if(input$OdourMean){ # Take odours' mean
       if(!is.null(nrow(data))){
@@ -949,7 +949,7 @@ shinyServer(function(input, output, session) {
   output$NBLAST_ChooseID <- renderUI({
     if(input$QueryType=="Library"){
       possible = subset(vals$neurons,skeleton.type%in%input$NBLAST_SkeletonType&cell.type%in%input$NBLAST_ChooseFromLibrary)
-      skel_choices = subset(all.neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
+      skel_choices = subset(all.lh.neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
       selectInput(inputId='NBLAST_ChooseID', label=paste0('individual neurons (',length(skel_choices),') :'), choices = skel_choices, selected = skel_choices[1], multiple=TRUE, selectize=TRUE)
     }
   })
@@ -969,22 +969,22 @@ shinyServer(function(input, output, session) {
         scores <- list()
         shiny::withProgress(min=1, max=10, message="NBLAST in progress", expr={ # NBLAST progress bar
         for(i in 1:10) {
-              chunk <- split(1:length(all.neurons.dps), cut(1:length(all.neurons.dps), 10))[[i]]
+              chunk <- split(1:length(all.lh.neurons.dps), cut(1:length(all.lh.neurons.dps), 10))[[i]]
               if(input$UseMean) {
                 if(length(query_neurons.dps)>1){
-                  mean.score <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + t(nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE,UseAlpha = TRUE))) / 2
+                  mean.score <- (nat.nblast::nblast(query_neurons.dps, all.lh.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + t(nat.nblast::nblast(all.lh.neurons.dps[chunk], query_neurons.dps, normalised=TRUE,UseAlpha = TRUE))) / 2
                   mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
                   scores[[i]] <- mean.score
                 }else{
-                  scores[[i]] <- (nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + nat.nblast::nblast(all.neurons.dps[chunk], query_neurons.dps, normalised=TRUE)) / 2
+                  scores[[i]] <- (nat.nblast::nblast(query_neurons.dps, all.lh.neurons.dps[chunk], normalised=TRUE, UseAlpha = TRUE) + nat.nblast::nblast(all.lh.neurons.dps[chunk], query_neurons.dps, normalised=TRUE)) / 2
                 }
               } else {
                 if(length(query_neurons.dps)>1){
-                  mean.score <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
+                  mean.score <- nat.nblast::nblast(query_neurons.dps, all.lh.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
                   mean.score <- matrix(rowMeans(mean.score),ncol=1,dimnames = list(rownames(mean.score),0)) # Average over multiple query neurons
                   scores[[i]] <- mean.score
                 }else{
-                  scores[[i]] <- nat.nblast::nblast(query_neurons.dps, all.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
+                  scores[[i]] <- nat.nblast::nblast(query_neurons.dps, all.lh.neurons.dps[chunk],normalised=TRUE, UseAlpha = TRUE)
                 }
               }
               shiny::setProgress(value=i)
@@ -992,7 +992,7 @@ shinyServer(function(input, output, session) {
         })
       })
       scores = base::unlist(scores,use.names = TRUE) # Unlist, preserve names
-      names(scores) = names(all.neurons.dps) # Hmm, make sure names are preserved
+      names(scores) = names(all.lh.neurons.dps) # Hmm, make sure names are preserved
     }else if (input$QueryType=="Library") { # Search through pre-calculated scores
       vals$NBLAST$tracings = vals$neurons[input$NBLAST_ChooseID]
       if(length(input$NBLAST_ChooseID)>1){
@@ -1011,7 +1011,7 @@ shinyServer(function(input, output, session) {
     scores <- sort(scores, decreasing=TRUE)
     vals$NBLAST$result = scores
     # Get, order and colour the NBLAST matches
-    matches = all.neurons[names(vals$NBLAST$result)[1:as.numeric(input$NumHits)]]
+    matches = all.lh.neurons[names(vals$NBLAST$result)[1:as.numeric(input$NumHits)]]
     matches[,"colour"] = zissou(length(matches))
     vals$NBLAST$matches = matches
     # Create data frame for selection table
@@ -1051,7 +1051,7 @@ shinyServer(function(input, output, session) {
   # Plot NBLAST results
   output$NBLAST_View3D <- renderRglwidget({
     rgl::clear3d()
-    rgl::plot3d(FCWB,alpha = 0.1)
+    rgl::plot3d(FCWBsmooth,alpha = 0.1)
     query_neurons <- vals$NBLAST$tracings
     query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.5)
     if(!is.null(query_neurons)) {
@@ -1233,7 +1233,7 @@ shinyServer(function(input, output, session) {
     }else{
       LineCodeCTs = input$LineCodeCTs
     }
-    linecodes = sort(unique(as.character(subset(lhns::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
+    linecodes = sort(unique(as.character(subset(lhlite::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
     if(!is.null(lines)&length(lines)>0){
       selectInput("LineCode", label = paste0("split-GAL4 lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
     }
@@ -1273,22 +1273,22 @@ shinyServer(function(input, output, session) {
   # MISC #
   ########
   
-  output$TRACTS <- renderTable(lhns::lh_tract_data)
+  output$TRACTS <- renderTable(lhlite::lh_tract_data)
   
-  output$PNINFO <- renderTable(lhns::pn.info)
+  output$PNINFO <- renderTable(lhlite::pn.info)
   
   output$PNCalicumResponses <- plotly::renderPlotly({
-     heatmaply::heatmaply(x = signif(lhns::badel.PN.responses,digits=2),
+     heatmaply::heatmaply(x = signif(lhlite::badel.PN.responses,digits=2),
                           xlab = "glomeruli", ylab = "odours",
                           colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
                           margins = c(100,100,40,20))
    })
 
-   output$Overlap <- plotly::renderPlotly({
-     heatmaply::heatmaply(x = lhns::lhns.pn.overlap.matrix,
-                          xlab = "glomeruli", ylab = "odours",
-                          colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
-                          margins = c(100,100,40,20))
-  })
+  #  output$Overlap <- plotly::renderPlotly({
+  #    heatmaply::heatmaply(x = lhlite::lhns.gloms.overlap,
+  #                         xlab = "glomeruli", ylab = "odours",
+  #                         colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
+  #                         margins = c(100,100,40,20))
+  # })
 
 })
