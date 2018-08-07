@@ -5,7 +5,7 @@
 # From CRAN
 library(devtools)
 cran.packages = c("shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","formattable","packrat","data.table",
-                  "ggplot2","DT","shinydashboard")
+                  "ggplot2","DT","shinydashboard","gdtools","svglite")
 for(cp in cran.packages){
   if (!require(cp,character.only = TRUE)){
     utils::install.packages(cp, repos='http://cran.us.r-project.org',lib = "/home/shiny/R/x86_64-pc-linux-gnu-library/3.4/")
