@@ -4,7 +4,7 @@
 
 # From CRAN
 library(devtools)
-cran.packages = c("digest","devtools","shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","formattable","packrat","data.table",
+cran.packages = c("cairo","gdtools","digest","devtools","shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","formattable","packrat","data.table",
                   "ggplot2","DT","shinydashboard","gdtools","svglite")
 for(cp in cran.packages){
   if (!require(cp,character.only = TRUE)){
@@ -21,3 +21,4 @@ for(gp in github.packages){
   } 
 }
 
+q()
