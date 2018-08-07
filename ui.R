@@ -210,6 +210,13 @@ tabPanel("data viewer",
                                            tabPanel("VNC", imageOutput("VNCMaximalProjection"))
                                )
                       ),
+                      tabPanel("functional connectivity",
+                               shiny::br(),
+                               plotly::plotlyOutput("Jeanne", width = "2000px", height = "1000px"),
+                               shiny::hr(),
+                               shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>). 
+                                           The rows of this matrix are clustered by the morpholofical similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the vaues in this matrix.")
+                      ),
                       tabPanel("uniglomerular PN info",
                           shiny::br(),
                           shiny::tableOutput('PNINFO'),
@@ -222,13 +229,13 @@ tabPanel("data viewer",
                                plotly::plotlyOutput("PNCalicumResponses", width = "2000px", height = "1000px"),
                                shiny::br(),
                                shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel al. 2017)</a>.</i>")
+                      ),
+                      tabPanel("predicted connectivity",
+                               plotly::plotlyOutput("Overlap", width = "2000px", height = "1000px"),
+                               shiny::br(),
+                               shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
+                                           normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>")
                       )
-                      # tabPanel("predicted connectivity",
-                      #          plotly::plotlyOutput("Overlap", width = "2000px", height = "1000px"),
-                      #          shiny::br(),
-                      #          shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and 
-                      #                      normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>")
-                      # )
                   )
           )
        )
