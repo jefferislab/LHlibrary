@@ -31,9 +31,10 @@ pnt_all = sort(unique(all.lh.neurons[,"pnt"]))
 pnt_all = pnt_all[pnt_all!=""&pnt_all!=" "]
 pnt_choices = list(`Anterior dorsal`=pnt_all[grepl("^ad",pnt_all)],`Anterior ventral`=pnt_all[grepl("^av",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pd",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pv",pnt_all)]) 
 pnt_choices = pnt_choices[pnt_choices!=""&pnt_choices!=" "]
-pnt_lhns = sort(names(lhns::primary.neurite.tracts))
+pnt_lhns = sort(names(lhlite::primary.neurite.tracts))
 ag_lhns = sort(unique(all.lh.neurons[,"anatomy.group"]))
-mod_pns = sort(unique(most.lhins[,"modality"]))
+mod_pns = c("Centrifugal", "Gustatory", "Mechanosensation", "Memory", "Neuromodulatory", 
+            "Olfactory", "Olfactory+Gustatory", "Thermosensory", "Unknown")
 mod_pns[mod_pns=="Olfactory+Gustatory"] = "Olfactory\\+Gustatory"
   
 # PNT image paths
@@ -50,7 +51,7 @@ split_brain_images = split_brain_images[!grepl("ntitled",split_brain_images)]
 split_vnc_images = paste0("maxprojections/VNC/",list.files("www/maxprojections/VNC/"))
 split_vnc_images = split_vnc_images[!grepl("ntitled|creenshot",split_vnc_images)]
 lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
-lines = intersect(lh_line_info$linecode,lines) # Some lines are lost...
+lines = intersect(lhlite::lh_line_info$linecode,lines) # Some lines are lost...
 
 
 ############
