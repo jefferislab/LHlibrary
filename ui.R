@@ -20,19 +20,19 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
   shiny::tabPanel("atlas",
             shiny::h3("the lateral horn library",align="left"),
             shiny::br(),
-            shiny::HTML("Welcome to the <a href='https://en.wikipedia.org/wiki/Lateral_horn_of_insect_brain'>lateral horn</a> of the <a href='https://en.wikipedia.org/wiki/Drosophila_melanogaster'>vinegar fly</a> brain. In short, the lateral horn is a brain area in the insect that is thought to help generate innate behaviours in response to different odours.
-                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <strong>data viewer </strong>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>.
+            shiny::HTML("Welcome to the <a href='https://en.wikipedia.org/wiki/Lateral_horn_of_insect_brain' target='_blank'>lateral horn</a> of the <a href='https://en.wikipedia.org/wiki/Drosophila_melanogaster' target='_blank'>vinegar fly</a> brain. In short, the lateral horn is a brain area in the insect that is thought to help generate innate behaviours in response to different odours.
+                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <strong>data viewer </strong>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>.
                         Neurons of the lateral horn are named by a hierarchical classification system. They are each classified into a <strong>primary neurite cluster</strong>, <strong>anatomy group</strong>
                         and finally <strong>cell type</strong>. See the <strong>naming system</strong> tab for details. The <strong>data viewer</strong> tab lets you display these morphologies in 3D, access data on neurons' odour responses and
-                        search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Dolan et al. 2018</a>."),
+                        search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>."),
             shiny::br(),
             shiny::br(),
             shiny::HTML("The data presented on this site originate primarily from five different sources cited in our <strog>about</strong> section.
-                        <strong>Split-GAL4</strong> lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi'>here</a>."),
+                        <strong>Split-GAL4</strong> lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi' target='_blank'>here</a>."),
             shiny::br(),
             shiny::br(),
             shiny::HTML("Below, you can click on the primary neurite clusters below to see their constituent anatomy groups and cell types. You can also choose to view the split-GAL4 line collection for
-                        sparse lateral horn driver lines collected by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Dolan et al. 2018</a>."),
+                        sparse lateral horn driver lines collected by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>."),
             shiny::br(),
             shiny::hr(),
             shiny::selectInput(inputId='AtlasContent', label='dataset:', choices = c("neuron skeletons","split-GAL4 lines"), selected = "neuron skeletons", multiple=FALSE, selectize=FALSE),
@@ -185,7 +185,7 @@ tabPanel("data viewer",
                                  plotly::plotlyOutput("Ephys"),
                                  shiny::br(),
                                  shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
-                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> for details.</i>")
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>")
                       ),
                       tabPanel("odour search",
                                br(),
@@ -198,7 +198,7 @@ tabPanel("data viewer",
                                plotly::plotlyOutput("OdoursResponses"),
                                shiny::br(),
                                shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
-                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> for details.</i>")
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>")
                       ),
                       tabPanel("split-GAL4 lines",
                                br(),
@@ -219,14 +219,14 @@ tabPanel("data viewer",
                       ),
                       tabPanel("uniglomerular PN responses",
                                shiny::br(),
-                               plotly::plotlyOutput("PNCalicumResponses", width = "1000px", height = "1000px"),
+                               plotly::plotlyOutput("PNCalicumResponses", width = "2000px", height = "1000px"),
                                shiny::br(),
-                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924'>(Badel al. 2017)</a>.</i>")
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <strong>NP225-Gal4</strong> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel al. 2017)</a>.</i>")
                       )
                       # tabPanel("predicted connectivity",
-                      #          plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
+                      #          plotly::plotlyOutput("Overlap", width = "2000px", height = "1000px"),
                       #          shiny::br(),
-                      #          shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and 
+                      #          shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and 
                       #                      normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>")
                       # )
                   )
@@ -243,14 +243,14 @@ tabPanel("data viewer",
             sidebarPanel(
               shiny::h2("NBLAST against the library"),
               shiny::HTML("Want to know what cell type your neuron belongs to? Or find a genetic line for it?
-                   Choose a neuron from our library or a neuron you have uploaded and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/'>NBLAST</a> it against our library.
+                   Choose a neuron from our library or a neuron you have uploaded and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a> it against our library.
                    If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
                    rather than just using the forwards score. The query neuron will be <b><span style='color: black;'>plotted in black</span></b>
                    in the 3D viewer to the right, alongside the top 10 hits (rainbow coloured from <span style='color: #F21A00;'>red = best</span> to <span style='color: #3B9AB2;'>cyan = worst</span>)."),
-              shiny::HTML("See what the scores mean <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/'>here</a>"),
+              shiny::HTML("See what the scores mean <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/how/' target='_blank'>here</a>"),
               shiny::br(),
               shiny::br(),
-              strong("To NBLAST neurons they must be in the neuron selection table, in the data viewer tab"),
+              shiny::HTML("<b><span style='color: #F21A00;'>To NBLAST neurons they must be in the neuron selection table, in the data viewer tab</span></b>"),
               shiny::br(),
               shiny::br(),
               selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
@@ -270,7 +270,7 @@ tabPanel("data viewer",
             h2("3D view"),
             includeCSS("loader.css"),
             shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
-            shiny::HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+            shiny::HTML("<div style='position: absolute; left: 220px; top: 300px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
             rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
             conditionalPanel(condition = "output.tracing_nblast_complete",
                              h3("Score distribution"),
@@ -294,12 +294,12 @@ tabPanel("naming system",
           shiny::br(),
           shiny::br(),
           shiny::HTML("In order to talk about something, you need to name it. Distilling the brain into its constituent cell types is an important step in not only reducing the dimensionality
-                      of the brain's circuitry into more understandable units but also communicating dicoveries in circuit neuroscience efficiently and <a href='https://en.wikipedia.org/wiki/Celestial_Emporium_of_Benevolent_Knowledge'>comprehensibly</a>, enabling us to identify the same units across studies.
+                      of the brain's circuitry into more understandable units but also communicating dicoveries in circuit neuroscience efficiently and <a href='https://en.wikipedia.org/wiki/Celestial_Emporium_of_Benevolent_Knowledge' target='_blank'>comprehensibly</a>, enabling us to identify the same units across studies.
                       The lateral horn is a complex neuropil consisting of more than 1300 neurons with diverse morphologies but lacking anatomical landmarks by which to categorise neurons, 
-                      such as the glomeruli of the antennal lobe and the compartments of the mushrooom body. An <a href='https://www.ncbi.nlm.nih.gov/pubmed/28334573'>elegant definition</a> of cell type comprises something about a neuron's origins, structure and function."),
+                      such as the glomeruli of the antennal lobe and the compartments of the mushrooom body. An <a href='https://www.ncbi.nlm.nih.gov/pubmed/28334573' target='_blank'>elegant definition</a> of cell type comprises something about a neuron's origins, structure and function."),
           shiny::br(),
           shiny::br(),
-          shiny::HTML("Neurons with dendrite in the lateral horn are named by a hierarchical classification system introduced in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a>.
+          shiny::HTML("Neurons with dendrite in the lateral horn are named by a hierarchical classification system introduced in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>.
                       This system uses three different features of increasing neuroanatomical detail to categorise neurons: <strong>primary neurite cluster</strong>, <strong>anatomy group</strong>
                       and finally <strong>cell type</strong>. Unlike with mammalian neurons, insect neurons' somata exist outside of the neuropil (the brain mesh of axons and dendrites).
                       The primary neurite tract is the region of the neuron separating the soma from the rest of the cell’s axons and dendrites. In the insect brain, 
@@ -311,11 +311,11 @@ tabPanel("naming system",
           shiny::fluidRow(
             column(6,
                 shiny::HTML("To classify a neuron into a cell type, we identify the: <strong>(1)</strong> primary neurite tract: the tract connecting the soma to the rest of the neuron, Frechter et al. identified 31 primary neurite tracts, named by their relationship with the LH, e.g. Posterior Ventral tract five or PV5.
-                      Next, we use a neuron morphological similarity algorithm NBlAST <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/'>(Costa et al. 2016)</a> <strong>(2)</strong> anatomy group: neurons of the same anatomy group share a common axon tract and have broadly similar arborisations in the lateral horn and their target areas, and
+                      Next, we use a neuron morphological similarity algorithm NBlAST <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>(Costa et al. 2016)</a> <strong>(2)</strong> anatomy group: neurons of the same anatomy group share a common axon tract and have broadly similar arborisations in the lateral horn and their target areas, and
                       <strong>(3)</strong> cell type, this is the finest level – the only difference between cell types of the same anatomy group are reproducible differences in axonal or dendritic arborisation patterns that likely reflect specific differences in connectivity. 
-                      These anatomical cell types are likely the functional units of the lateral horn, and neurons of a type have been shown to respond similarly <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>(Frechter et al. 2018)</a> and
-                      morphological similar neurons exhibit similar - though not exactly the same - structural <a href='https://www.biorxiv.org/content/early/2017/08/29/167312'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a> and functional connectivity 
-                      <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998'>(Fişek et al. 2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998'>Jeanne, Fişek et al. 2018)</a>. 
+                      These anatomical cell types are likely the functional units of the lateral horn, and neurons of a type have been shown to respond similarly <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a> and
+                      morphological similar neurons exhibit similar - though not exactly the same - structural <a href='https://www.biorxiv.org/content/early/2017/08/29/167312' target='_blank'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a> and functional connectivity 
+                      <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>(Fişek et al. 2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018)</a>. 
                       As such our definition of cell type likely reflects both the developmental origin of the neuron in question, its connectivity and its current function."),
                 shiny::br(),
                 shiny::br(),
@@ -327,11 +327,11 @@ tabPanel("naming system",
                 shiny::br(),
                 shiny::HTML("We have also classified projection neurons to the lateral horn i.e. the major inputs to lateral horn neurons.
                             We divided LH inputs into functional categories based on the sensory modality inferred from their dendritic neuropil and named them by
-                            extending the naming system of <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945'>Tanaka et al. (2012)</a>."),
+                            extending the naming system of <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945' target='_blank'>Tanaka et al. (2012)</a>."),
                 shiny::br(),
                 shiny::br(),
                 shiny::HTML("Below are the results from our attempts to find and quantify the number of neurons in the major LH-bound primary neurite tracts - which had originally been defined
-                            at the level of light microscopy - using a recent whole brain dataset for the adult female fly brain gathered by <a href='https://en.wikipedia.org/wiki/Transmission_electron_microscopy'>electron microscopy</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368'>(Zheng et al. 2018)</a>.
+                            at the level of light microscopy - using a recent whole brain dataset for the adult female fly brain gathered by <a href='https://en.wikipedia.org/wiki/Transmission_electron_microscopy' target='_blank'>electron microscopy</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368' target='_blank'>(Zheng et al. 2018)</a>.
                            (Names with an X indicate 'new' tracts that were in the electron micrographs and found to run approximately parallel with tracts we had identified at light-level, and so in terms of nomenclature neurons therein have stayed as part of the same primary neuritr cluster.)")
                 ),
             column(6,
@@ -364,7 +364,7 @@ tabPanel("the lateral horn",
            shiny::br(),
            shiny::fluidRow(
              column(5,
-                    shiny::HTML("<i>The lateral horn of the fly is thought to be an insinct processing center, the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/'>Jefferis group</a> are interested in
+                    shiny::HTML("<i>The lateral horn of the fly is thought to be an insinct processing center, the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/' target='_blank'>Jefferis group</a> are interested in
                            the statistics of connectivity and convergence between its constituent neurons and how it helps mount
                            behavioural responses to innate, potentially multi-modal stimuli in the face of the fly's ever changing environment.</i>"),
                     shiny::br(),
@@ -375,8 +375,8 @@ tabPanel("the lateral horn",
                                 ascribed to stimuli in both an experience-independent, and an experience-dependent
                                 manner. Coarse neuroanatomical work has generally shown that nervous systems
                                 parallelise sensory processing between neural circuits for innate and learned behaviour, 
-                                although the view that these streams are completely separate has been challenged <a href='https://www.biorxiv.org/content/early/2017/08/29/167312'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a>
-                                and at some point these two streams must be integrated <a href='https://www.ncbi.nlm.nih.gov/pubmed/27871975'>(Schultzhaus et al. 2017)</a>."),
+                                although the view that these streams are completely separate has been challenged <a href='https://www.biorxiv.org/content/early/2017/08/29/167312' target='_blank'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a>
+                                and at some point these two streams must be integrated <a href='https://www.ncbi.nlm.nih.gov/pubmed/27871975' target='_blank'>(Schultzhaus et al. 2017)</a>."),
                     shiny::br(),
                     shiny::br(),
                     shiny::HTML("This is true of the olfactory system. Olfactory processing has been of interest to those studying neural circuits since the
@@ -395,33 +395,33 @@ tabPanel("the lateral horn",
                                 environment. Volatile molecules engage seven-transmembrane olfactory receptors on
                                 these olfactory receptor neurons, each olfactory receptor neuron expressing on average
                                 one of fifty olfactory receptors in the case of the most well studied system, that of the
-                                adult fruit fly <i>Drosophila melanogaster</i> <a href='https://www.ncbi.nlm.nih.gov/pubmed/16139208'>(Couto et al. 2005;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/16332533'>Fishilevich et al. 2005)</a>.
+                                adult fruit fly <i>Drosophila melanogaster</i> <a href='https://www.ncbi.nlm.nih.gov/pubmed/16139208' target='_blank'>(Couto et al. 2005;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/16332533' target='_blank'>Fishilevich et al. 2005)</a>.
                                 olfactory receptor neurons project into the antennal lobe in the central brain, where they
                                 form a highly stereotyped glomerular olfactory map. Second order projection neurons
                                 (<strong>PNs</strong>), that are either uniglomerular (uniglomerular PNs), or sample multiple glomeruli
                                 as well as areas of gustatory information input (multiglomerular PNs), proceed to largely
                                 target just two neuroanatomical areas, the Kenyon cells (<strong>KCs</strong>) of the mushroom body (<strong>MB</strong>) and the
-                                lateral horn (<strong>LH</strong>) of the protocerebrum <a href='https://www.ncbi.nlm.nih.gov/pubmed/17382886'>(Jefferis et al. 2007;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/12007410/'>Marin et al. 2002;</a> 
-                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/12007409'>Wong et al. 2002;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945'>Tanaka et al. 2012)</a>. It has been suggested that these two sites, the LH and the mushroom body, represent
+                                lateral horn (<strong>LH</strong>) of the protocerebrum <a href='https://www.ncbi.nlm.nih.gov/pubmed/17382886' target='_blank'>(Jefferis et al. 2007;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/12007410/' target='_blank'>Marin et al. 2002;</a> 
+                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/12007409' target='_blank'>Wong et al. 2002;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/22592945' target='_blank'>Tanaka et al. 2012)</a>. It has been suggested that these two sites, the LH and the mushroom body, represent
                                 parallel pathways for not only olfactory, but gustatory, visual, mechanosensory, and
-                                thermosensory processing <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>(Frechter et al. 2018)</a>. Ablation of the mushroom body yields a deficit in olfactory
-                                learning but not in innate responses to olfactory stimuli <a href='https://www.ncbi.nlm.nih.gov/pubmed/8303280'>(de Belle and Heisenberg,
-                                1994;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/12210097'>Kido and Ito, 2002)</a>, and transgenic expression of tetanus toxin in PNs that
+                                thermosensory processing <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>. Ablation of the mushroom body yields a deficit in olfactory
+                                learning but not in innate responses to olfactory stimuli <a href='https://www.ncbi.nlm.nih.gov/pubmed/8303280' target='_blank'>(de Belle and Heisenberg,
+                                1994;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/12210097' target='_blank'>Kido and Ito, 2002)</a>, and transgenic expression of tetanus toxin in PNs that
                                 directly target the mushroom body and directly and indirectly target the LH produces a
-                                deficit in innate courtship behaviour <a href='https://www.ncbi.nlm.nih.gov/m/pubmed/11742061/'>(Heimbeck et al. 2001)</a>."),
+                                deficit in innate courtship behaviour <a href='https://www.ncbi.nlm.nih.gov/m/pubmed/11742061/' target='_blank'>(Heimbeck et al. 2001)</a>."),
                     shiny::br(),
                     shiny::br(),
                     shiny::HTML("Despite receiving similar projections from the antennal lobe, the MB and the LH exhibit very different connectivity rules. 
-                                In the MB, sparse, random connectivity with KCs <a href='https://www.ncbi.nlm.nih.gov/pubmed/23615618'>(Caron et al. 2013;</a> 
-                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/28796202'>Eichler et al. 2017;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/24141312'>Gruntman and Turner 2013)</a>, with each KC receiving pooling an average of 5 PNs, each of which connecting to many other KCs <a href='https://www.ncbi.nlm.nih.gov/pubmed/23615618'>(Caron et al. 2013)</a>.
-                                The KCs themselves only consist of ~2000 individual cells <a href='https://www.ncbi.nlm.nih.gov/pubmed/19706282'>(Masse et al. 2009)</a> split into only three canonical cell types (gamma, alpha'/beta', alpha/beta) synapse upon only ~22 mushroom body output neuron (<strong>MBON</strong>) cell types consisting of just ~35 individual cells
-                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/25535793'(Aso et al.2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/28718765'>Takemura et al. 2017)</a>. 
+                                In the MB, sparse, random connectivity with KCs <a href='https://www.ncbi.nlm.nih.gov/pubmed/23615618' target='_blank'>(Caron et al. 2013;</a> 
+                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/28796202' target='_blank'>Eichler et al. 2017;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/24141312' target='_blank'>Gruntman and Turner 2013)</a>, with each KC receiving pooling an average of 5 PNs, each of which connecting to many other KCs <a href='https://www.ncbi.nlm.nih.gov/pubmed/23615618' target='_blank'>(Caron et al. 2013)</a>.
+                                The KCs themselves only consist of ~2000 individual cells <a href='https://www.ncbi.nlm.nih.gov/pubmed/19706282' target='_blank'>(Masse et al. 2009)</a> split into only three canonical cell types (gamma, alpha'/beta', alpha/beta) synapse upon only ~22 mushroom body output neuron (<strong>MBON</strong>) cell types consisting of just ~35 individual cells
+                                <a href='https://www.ncbi.nlm.nih.gov/pubmed/25535793'(Aso et al.2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/28718765' target='_blank'>Takemura et al. 2017)</a>. 
                                 It is thought that memories are stored in the KC->MBON connection weight which can be depressed by dopaminergic inputs. 
-                                Combined with local inhibition <a href='https://www.ncbi.nlm.nih.gov/pubmed/24561998'>(Lin et al. 2014)</a>, this set up means that memories have a sparse KC representation <a href='https://www.ncbi.nlm.nih.gov/pubmed/12130775'>(Perez-Orive et al. 2002)</a> which helps to minimise conflict between memory representations.
-                                In stark contrast, it seems that LH neurons exhibit stereotyped functional connectivity across animals <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998'>(Fişek et al. 2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998'>Jeanne, Fişek et al. 2018)</a>
-                                and structural connectivity within a cell type in the same animal <a href='https://www.biorxiv.org/content/early/2017/08/29/167312'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a>. LH neuron responses to dours can be explained as a linear summation
-                                of their PN inputs <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998'>(Fişek et al. 2014)</a> and neurons of similar morphology that share a primary neurite tract (see <strong>naming</strong> tab) respond similarly <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>(Frechter et al. 2018)</a>. 
-                                In contract to KCs they comprise likely more than ~1390 neurons dividing into ~250 cell types of which ~150 have most of their dendrite within the LH ('core LH' neurons) <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>(Frechter et al. 2018)</a>.
+                                Combined with local inhibition <a href='https://www.ncbi.nlm.nih.gov/pubmed/24561998' target='_blank'>(Lin et al. 2014)</a>, this set up means that memories have a sparse KC representation <a href='https://www.ncbi.nlm.nih.gov/pubmed/12130775' target='_blank'>(Perez-Orive et al. 2002)</a> which helps to minimise conflict between memory representations.
+                                In stark contrast, it seems that LH neurons exhibit stereotyped functional connectivity across animals <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>(Fişek et al. 2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018)</a>
+                                and structural connectivity within a cell type in the same animal <a href='https://www.biorxiv.org/content/early/2017/08/29/167312' target='_blank'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a>. LH neuron responses to dours can be explained as a linear summation
+                                of their PN inputs <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>(Fişek et al. 2014)</a> and neurons of similar morphology that share a primary neurite tract (see <strong>naming</strong> tab) respond similarly <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>. 
+                                In contract to KCs they comprise likely more than ~1390 neurons dividing into ~250 cell types of which ~150 have most of their dendrite within the LH ('core LH' neurons) <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>.
                                 This means that the actual number of KCs and LH neurons is similar, but the diversity of LH neurons is far greater than their MB counterparts, including MBONs. 
                                 In other words, olfactory second->third order neuron divergence in the MB is ~1:15 in terms of cell number, but leads to a 9:1 reduction in dimensionality in terms of MBON putput. 
                                 In the LH, divergence is ~1:9 in terms of cell numbers but ~1:1 in terms of core LH output cell types."),
@@ -430,7 +430,7 @@ tabPanel("the lateral horn",
                     shiny::HTML("Part of the reason why the LH is relatively ill-understood as compared with the
                                 mushroom body is that its anatomical structure is less clear, and has proven less
                                 targetable by genetic techniques than the more distinctive mushroom bodies. 
-                                To this end, we have produced a set of genetic reagents to target the lateral horn  <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>(Dolan et al. 2018)</a>.
+                                To this end, we have produced a set of genetic reagents to target the lateral horn  <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Dolan et al. 2018)</a>.
                                 However, in order to resolve outstanding questions about its function, its structure in terms of
                                 circuit logic needs to be fully understood, and this will require high-resolution, synaptic level reconstruction of LH circuitry.
                                 The large number of KCs enables sparse odor coding, which is proposed to avoid synaptic interference during memory formation.
@@ -472,24 +472,24 @@ tabPanel("the lateral horn",
  tabPanel("about",
           h3("Purpose"),
           shiny::HTML("Olfactory information in <i>Drosophila melanogaster</i> may be processed by as few as three synapses before engaging motor programmes. Previous research has largely focused on the more superficial components of this shallow system.
-                In the the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/'> Jefferis group</a> at the <a href='https://www2.mrc-lmb.cam.ac.uk/'>MRC LMB</a> in Cambridge, UK, we aim to describe the internal circuitry of the lateral horn (LH), the insect analogue of the mammalian cortical amygdala.
-                This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/06/05/336982'>Dolan et al. 2018</a>,
+                In the the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/' target='_blank'> Jefferis group</a> at the <a href='https://www2.mrc-lmb.cam.ac.uk/' target='_blank'>MRC LMB</a> in Cambridge, UK, we aim to describe the internal circuitry of the lateral horn (LH), the insect analogue of the mammalian cortical amygdala.
+                This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>,
                 and aims to bring together datasets that enrich our knowledge of cell types of the lateral horn"
                       ),
           h3("R tools"),
-          shiny::HTML("We have developed a <a href='https://github.com/jefferislab'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
-                      Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/'>here</a>. 
-                      You can also use NBLAST with data from <a href='http://www.flycircuit.tw/'>FlyCircuit</a> without needed to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/'>NBLAST-on-the-fly</a> by James Manton."),
+          shiny::HTML("We have developed a <a href='https://github.com/jefferislab' target='_blank'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
+                      Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/' target='_blank'>here</a>. 
+                      You can also use NBLAST with data from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a> without needed to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>NBLAST-on-the-fly</a> by James Manton."),
           shiny::br(),
           shiny::div(shiny::HTML('<iframe width="420px" height="345px" src="https://www.youtube.com/watch?v=tyg6kbixuaM" frameborder="0" allowfullscreen></iframe>'),align="center"),
           h3("Source code"),
-          shiny::HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab'>GitHub</a>."),
+          shiny::HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab' target='_blank'>GitHub</a>."),
           h3("Preparing own data"),
-          shiny::HTML("Protocols for <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071720.full'>immunostaining and imaging fly brains</a>, as well as <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071738.full'>registration of the resulting images</a> are available from Cold Spring Harbor Protocols.
-                      We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions'>here</a>.
-                      In order to see single cell morphologies in genetic lines that label multiple neurons per brain, <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/'>MultiColor FlpOut (MCFO)</a> is recommended."),
+          shiny::HTML("Protocols for <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071720.full' target='_blank'>immunostaining and imaging fly brains</a>, as well as <a href='http://cshprotocols.cshlp.org/content/2013/4/pdb.prot071738.full' target='_blank'>registration of the resulting images</a> are available from Cold Spring Harbor Protocols.
+                      We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer' target='_blank'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions' target='_blank'>here</a>.
+                      In order to see single cell morphologies in genetic lines that label multiple neurons per brain, <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MultiColor FlpOut (MCFO)</a> is recommended."),
           h3("Split-GAL4 lines"),
-          shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi'>here</a>"),
+          shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi' target='_blank'>here</a>"),
           h3("Data sources"),
           shiny::br(),          
           shiny::HTML("<strong>1.</strong> Frechter, S., Bates, A.S., Tootoonian, S., Dolan, M.-J., Manton, J.D., Jamasb, A., Kohl, J., Bock, D., and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
@@ -497,7 +497,7 @@ tabPanel("the lateral horn",
           shiny::br(),
           shiny::br(),
           shiny::HTML("<strong>2.</strong> Dolan, M-J, Frechter, S., Bates, A.S., Dan, C., Huoviala, P., Roberts, R.J.V., Schlegel, P., Dhawan, S., Tabano, R., Dionne, H., Christoforou, C., Close, K., Sutcliffe, B.,  Giuliani, B., Feng, L., Costa, M., Ihrke, G., Meissner, G., Bock, D., Aso, Y., Rubin, G.M. and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
-                      <i>[split-GAL4 lines for lateral horn neurons, cell type segmentations from confical stack data and single cell <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/'>MCFO</a> skeletons]</i>"),
+                      <i>[split-GAL4 lines for lateral horn neurons, cell type segmentations from confical stack data and single cell <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MCFO</a> skeletons]</i>"),
           shiny::br(),
           shiny::br(),
           shiny::HTML("<strong>3.</strong> Jeanne, J.M., Fişek, M., and Wilson, R.I. (2018). The Organization of Projections from Olfactory Glomeruli onto Higher-Order Neurons. Neuron.
@@ -505,7 +505,7 @@ tabPanel("the lateral horn",
           shiny::br(),
           shiny::br(),          
           shiny::HTML("<strong>4.</strong> Chiang, A.-S., Lin, C.-Y., Chuang, C.-C., Chang, H.-M., Hsieh, C.-H., Yeh, C.-W., Shih, C.-T., Wu, J.-J., Wang, G.-T., Chen, Y.-C., et al. (2011). Three-dimensional reconstruction of brain-wide wiring networks in Drosophila at single-cell resolution. Curr. Biol.
-                      <i>[over 16,000 single cell morphologies from <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/'>MCFO</a>, increased number skeletons available from <a href='http://www.flycircuit.tw/'>FlyCircuit</a>]</i>"),
+                      <i>[over 16,000 single cell morphologies from <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MCFO</a>, increased number skeletons available from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a>]</i>"),
           
           shiny::br(),
           shiny::br(),
@@ -516,12 +516,12 @@ tabPanel("the lateral horn",
           shiny::br(),
           shiny::HTML("<i>Note: You can cite this Web app by citing Frechter et al. and in addition the relevant publications from which the data you wish to mention originate, e.g. Chiang et al. 2011 for FlyCircuit skeletons.</i>"),
           h3("Contact us"),
-          shiny::HTML("If you require more information about this work, please contact <a href='https://www.linkedin.com/in/alex-bates-22a265a7/'>Alex Bates</a> at <strong>ab2248[at]cam.ac.uk</strong> or <a href='https://www2.mrc-lmb.cam.ac.uk/group-leaders/h-to-m/gregory-jefferis/'>Gregory Jefferis</a> at <strong>jefferis[at]mrc-lmb.cam.ac.uk</strong>"
+          shiny::HTML("If you require more information about this work, please contact <a href='https://www.linkedin.com/in/alex-bates-22a265a7/' target='_blank'>Alex Bates</a> at <strong>ab2248[at]cam.ac.uk</strong> or <a href='https://www2.mrc-lmb.cam.ac.uk/group-leaders/h-to-m/gregory-jefferis/' target='_blank'>Gregory Jefferis</a> at <strong>jefferis[at]mrc-lmb.cam.ac.uk</strong>"
           ),
           h3("Acknowledgements"),
-          shiny::HTML("This Shiny App was built by Alex Bates, in part based on code by <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/'>James Manton</a>.
+          shiny::HTML("This Shiny App was built by Alex Bates, in part based on code by <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>James Manton</a>.
                       It relies on light-level data collected by Gregory Jefferis, Shahar Frechter, Michael-John Dolan (along with the FlyLight team at Janelia Research Campus), Ann-Shyn Chiang's group, Mehmet Fisek and Jamie Jeanne and collated by Alex Bates, 
-                      and EM data reconstructed primarily by Alex Bates, Ruairi Roberts, Philipp Schlegel and Gregory Jefferis using a nanoscale resolution dataset for a single adult female fly brain from the Bock group at Janelia Research Campus <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368'>(Zheng et al. 2018)</a>."
+                      and EM data reconstructed primarily by Alex Bates, Ruairi Roberts, Philipp Schlegel and Gregory Jefferis using a nanoscale resolution dataset for a single adult female fly brain from the Bock group at Janelia Research Campus <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368' target='_blank'>(Zheng et al. 2018)</a>."
           ),
           shiny::hr()
         )

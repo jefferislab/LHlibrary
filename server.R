@@ -767,11 +767,11 @@ shinyServer(function(input, output, session) {
       selectInput(inputId = 'TracingType', label = 'upload type', choices = list(`local file`="UserUpload",`CATMAID API`="CATMAID"), selected = list(`local file`="UserUpload")),
       conditionalPanel(condition = "input.TracingType == 'UserUpload'",
         shiny::HTML("Upload a tracing (e.g. .swc or .rds file) or skeletonised neuron (e.g. .nrrd). 
-               You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
+               You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836' target='_blank'>NBLAST</a>.
                The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer. 
                The tracing to be uploaded must be registered into a standard fly brainspace.
                Supported neuron file formats include: swc (.swc), vtk (.vtk), fijitraces (.traces, .xml), amiramesh (.am, .amiramesh), hxlines (.am), hxskels (.am), neuroml (.xml, .nml), nrrd (.nrrd, .nhdr), rds (.rds), swcng (.swc), and vaa3draw (.v3d, .v3draw).
-               You can learn more about registering your neuron and bridging it between templates <a href='http://dx.doi.org/10.1016/j.neuron.2016.06.012'>here</a>.
+               You can learn more about registering your neuron and bridging it between templates <a href='http://dx.doi.org/10.1016/j.neuron.2016.06.012' target='_blank'>here</a>.
                See our about section for more information."),             
         hr(), 
         fileInput('TracingFile', label = NULL, multiple = TRUE, placeholder = "No file selected"),
@@ -780,14 +780,14 @@ shinyServer(function(input, output, session) {
                     selected =  list(`FlyCircuit (FCWB)`= "FCWB"),
                     multiple = FALSE,
                     selectize = TRUE),
-        shiny::HTML("Neurons will be bridged <a href='https://www.biorxiv.org/content/early/2014/06/19/006353'>(Manton et al. 2014)</a> from the selected template space into FCWB. Neurons that have not been registered to a template brain cannot be transformed to FCWB in this workflow.")
+        shiny::HTML("Neurons will be bridged <a href='https://www.biorxiv.org/content/early/2014/06/19/006353' target='_blank'>(Manton et al. 2014)</a> from the selected template space into FCWB. Neurons that have not been registered to a template brain cannot be transformed to FCWB in this workflow.")
       ),
       conditionalPanel(condition = "input.TracingType == 'CATMAID'",
                        shiny::HTML("Upload a synaptic-resolution tracing using the CATMAID API, based on electron microscopy data.
-                            You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836'>NBLAST</a>.
+                            You can then compare your neuron against the LH-associated neurons in our library visually and via <a href='https://www.ncbi.nlm.nih.gov/pubmed/27373836' target='_blank'>NBLAST</a>.
                             The query neuron will at first be plotted in <b><span style='color: black;'>black</span></b> or <b><span style='color: grey;'>grey</span></b> in the 3D viewer.
                             To do this, you will need login details to a CATMAID server for fly brain data.
-                            You will need a URL for a CATMAID server and a CATMAID <a href='http://catmaid.readthedocs.io/en/stable/api.html'>token</a>.
+                            You will need a URL for a CATMAID server and a CATMAID <a href='http://catmaid.readthedocs.io/en/stable/api.html' target='_blank'>token</a>.
                             You may also need the http basic authorisation username/password that optionally secure a CATMAID website.
                             These are not the same as your CATMAID login details."),             
                        hr(),
@@ -830,10 +830,10 @@ shinyServer(function(input, output, session) {
     on.exit(progress$close())
     progress$set(message = "uploading neurons", value = 0)
     # update CATMAID login values
-    vals$CATMAID$CATMAID_server = input$CATMAID_server
-    vals$CATMAID$CATMAID_authname = input$CATMAID_authname
-    vals$CATMAID$CATMAID_authpassword = input$CATMAID_authpassword
-    vals$CATMAID$CATMAID_token = input$CATMAID_token
+    vals$CATMAID$CATMAID_server = as.character(input$CATMAID_server)
+    vals$CATMAID$CATMAID_authname = as.character(input$CATMAID_authname)
+    vals$CATMAID$CATMAID_authpassword = as.character(input$CATMAID_authpassword)
+    vals$CATMAID$CATMAID_token = as.character(input$CATMAID_token)
     isolate({
       tracing_neurons <- nat::neuronlist()
       if(input$TracingType=="CATMAID"){ # Access the catmaid API
@@ -844,12 +844,13 @@ shinyServer(function(input, output, session) {
           skids = strsplit(input$CATMAID_search," ") # Separated by a space
         }
         progress$inc(1/3, detail = "pulling neurons from CATMAID")
-        tracing_neurons <- tryCatch(elmr::fetchn_fafb(skids = skids, mirror = input$TracingMirror, reference = nat.flybrains::FCWB), error = function(e) NULL)
+        tracing_neurons <- tryCatch(elmr::fetchn_fafb(skids = skids, mirror = input$TracingMirror, reference = nat.flybrains::FCWB, conn = CATMAID.conn), error = function(e) NULL)
         if(is.null(tracing_neurons)){
-          warning("CATMAID pull failed. Login details may be incorrect, search terms do not exist in database.")
+          warning("CATMAID pull failed. Login details may be incorrect or search terms do not exist in database")
+          shiny::showNotification("CATMAID pull failed. Login details may be incorrect or search terms do not exist in database")
         }else{
           progress$inc(2/3, detail = "transforming neurons")
-          # tracing_neurons = nat::nlapply(tracing_neurons,catnat:::resample.catmaidneuron,stepsize = 1) # TODO resample with connectors
+          tracing_neurons = nat::nlapply(X = tracing_neurons, FUN = nat:::resample.neuron,stepsize = 5) # resample with connectors
           tdf = as.data.frame(matrix("unknown",nrow = length(tracing_neurons),ncol = length(selected_columns), dimnames = list(names(tracing_neurons),selected_columns)))
           tdf[,"id"] = tracing_neurons[,"name"]
           tdf[,"skeleton.type"] = input$TracingType
@@ -996,11 +997,11 @@ shinyServer(function(input, output, session) {
     }else if (input$QueryType=="Library") { # Search through pre-calculated scores
       vals$NBLAST$tracings = vals$neurons[input$NBLAST_ChooseID]
       if(length(input$NBLAST_ChooseID)>1){
-        scores = colSums(lh_nblast[input$NBLAST_ChooseID,])
-        scores.reverse = colSums(lh_nblast[input$NBLAST_ChooseID,])
+        scores = colSums(lhlite::lh_nblast[input$NBLAST_ChooseID,])
+        scores.reverse = colSums(lhlite::lh_nblast[input$NBLAST_ChooseID,])
       }else{
-        scores = lh_nblast[input$NBLAST_ChooseID,]
-        scores.reverse = lh_nblast[input$NBLAST_ChooseID,]
+        scores = lhlite::lh_nblast[input$NBLAST_ChooseID,]
+        scores.reverse = lhlite::lh_nblast[input$NBLAST_ChooseID,]
       }
       if(input$UseMean){
         scores = (scores + scores.reverse) / 2
@@ -1285,8 +1286,8 @@ shinyServer(function(input, output, session) {
    })
 
   #  output$Overlap <- plotly::renderPlotly({
-  #    heatmaply::heatmaply(x = lhlite::lhns.gloms.overlap,
-  #                         xlab = "glomeruli", ylab = "odours",
+  #    heatmaply::heatmaply(x = lhns.gloms.overlap,
+  #                         xlab = "core lateral horn neurons", ylab = "uniglomerular PNs",
   #                         colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
   #                         margins = c(100,100,40,20))
   # })
