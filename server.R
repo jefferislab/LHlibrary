@@ -1287,7 +1287,7 @@ shinyServer(function(input, output, session) {
 
   output$Overlap <- plotly::renderPlotly({
      heatmaply::heatmaply(x = t(lhns.gloms.overlap),
-                          xlab = "core lateral horn neurons", ylab = "uniglomerular PNs",
+                          ylab = "core lateral horn neurons", xlab = "uniglomerular PNs",
                           colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
                           margins = c(100,100,40,20))
   })
