@@ -27,12 +27,12 @@ zissou = colorRampPalette(rev(wesanderson::wes_palette("Zissou1")))
 selected_columns = c("id","pnt", "anatomy.group", "cell.type", "coreLH","type", "transmitter","skeleton.type","colour")
 
 # Data management
-pnt_all = sort(unique(all.neurons[,"pnt"]))
+pnt_all = sort(unique(all.lh.neurons[,"pnt"]))
 pnt_all = pnt_all[pnt_all!=""&pnt_all!=" "]
 pnt_choices = list(`Anterior dorsal`=pnt_all[grepl("^ad",pnt_all)],`Anterior ventral`=pnt_all[grepl("^av",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pd",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pv",pnt_all)]) 
 pnt_choices = pnt_choices[pnt_choices!=""&pnt_choices!=" "]
 pnt_lhns = sort(names(lhns::primary.neurite.tracts))
-ag_lhns = sort(unique(all.neurons[,"anatomy.group"]))
+ag_lhns = sort(unique(all.lh.neurons[,"anatomy.group"]))
 mod_pns = sort(unique(most.lhins[,"modality"]))
 mod_pns[mod_pns=="Olfactory+Gustatory"] = "Olfactory\\+Gustatory"
   
