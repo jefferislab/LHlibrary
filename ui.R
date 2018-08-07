@@ -213,7 +213,7 @@ tabPanel("data viewer",
                       tabPanel("functional connectivity",
                                shiny::br(),
                                plotly::plotlyOutput("Jeanne", width = "2000px", height = "1000px"),
-                               shiny::hr(),
+                               shiny::br(),
                                shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>). 
                                            The rows of this matrix are clustered by the morpholofical similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the vaues in this matrix.")
                       ),
