@@ -74,6 +74,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                 ),
                                          tabPanel("projection neurons",
                                                   fluidRow(
+                                                    shiny::HTML("Images with an orange background depict all projection neurons of a moadlity, in grey all neurons of a tract, and in white individual anatomy groups"),
                                                     lapply(1:length(PN_images), function(i) {
                                                       column(3,tags$button(
                                                         id = PN_images[i],
@@ -122,14 +123,14 @@ tabPanel("data viewer",
                                 hr()
                ),
                conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'",
-                  h5("Or search groups of lateral horn neurons"),
+                  h5("search mushroom body output neuronssearch groups of lateral horn neurons"),
                   uiOutput("PNTselection"),
                   uiOutput("AGselection"),
                   uiOutput("CTselection"),
                   hr()
                ),
                conditionalPanel(condition="input.Type =='MBON'",
-                                h5("Or search mushroom body output neurons"),
+                                h5("search mushroom body output neurons"),
                                 uiOutput("MBONselection"),
                                 hr()
                ),
@@ -233,7 +234,7 @@ tabPanel("data viewer",
                                shiny::br(),
                                plotly::plotlyOutput("Jeanne", width = "100%", height = "1000px"),
                                shiny::br(),
-                               shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>).The rows of this matrix are clustered by the morphological similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the values in this matrix.</i>"),
+                               shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>). The rows of this matrix are clustered by the morphological similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the values in this matrix.</i>"),
                                shiny::br()
                                )
                    )
