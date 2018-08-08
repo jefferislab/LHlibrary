@@ -188,7 +188,8 @@ tabPanel("data viewer",
                                  plotly::plotlyOutput("Ephys"),
                                  shiny::br(),
                                  shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
-                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>")
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>"),
+                               shiny::hr()
                       ),
                       tabPanel("odour search",
                                br(),
@@ -201,7 +202,8 @@ tabPanel("data viewer",
                                plotly::plotlyOutput("OdoursResponses"),
                                shiny::br(),
                                shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
-                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>")
+                                             See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>"),
+                               shiny::hr()
                       ),
                       tabPanel("split-GAL4 lines",
                                br(),
@@ -211,36 +213,41 @@ tabPanel("data viewer",
                                tabsetPanel(type = "tabs",
                                            tabPanel("brain", imageOutput("MaximalProjection")),
                                            tabPanel("VNC", imageOutput("VNCMaximalProjection"))
-                               )
+                               ),
+                               shiny::hr()
                       ),
                       tabPanel("uniglomerular PN info",
                           shiny::br(),
                           shiny::tableOutput('PNINFO'),
                           tags$head(tags$style("#PNINFO table {background-color: white; }", media="screen", type="text/css")),
                           shiny::HTML("<i>Information in table primarily collated by Paavo Huoviala and Marta Costa</i>"),
-                          shiny::br()
+                          shiny::br(),
+                          shiny::hr()
                       ),
                       tabPanel("uniglomerular PN responses",
                                shiny::br(),
                                plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
                                shiny::br(),
-                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <b><strong>NP225-Gal4</strong></b> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel al. 2017)</a>.</i>"),
-                               shiny::br()
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <b><strong>NP225-Gal4</strong></b> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel et al. 2017)</a>.</i>"),
+                               shiny::br(),
+                               shiny::hr()
                       ),
                       tabPanel("predicted connectivity",
                                plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
                                shiny::br(),
                                shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
                                            normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>"),
-                               shiny::br()
+                               shiny::br(),
+                               shiny::hr()
                       ),
                       tabPanel("functional connectivity",
                                shiny::br(),
                                plotly::plotlyOutput("Jeanne", width = "100%", height = "1000px"),
                                shiny::br(),
                                shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>). The rows of this matrix are clustered by the morphological similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the values in this matrix.</i>"),
-                               shiny::br()
-                               )
+                               shiny::br(),
+                               shiny::hr()
+                      )
                    )
           )
        )

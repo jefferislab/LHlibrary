@@ -6,7 +6,6 @@
 # Load the packages we need for this App
 source("init.R")
 source("functions.R")
-options(warn=-1) # Turns warnings off
 
 shinyServer(function(input, output, session) {
   

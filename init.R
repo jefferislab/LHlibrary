@@ -1,5 +1,7 @@
 # Also set some options
+rm(list = ls())
 options(rgl.useNULL=TRUE)
+options(warn=-1) # Turns warnings off
 
 # R packages we need for this lateralhorn app
 library(shiny)
