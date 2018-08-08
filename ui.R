@@ -73,8 +73,8 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                   })
                                                 ),
                                          tabPanel("projection neurons",
+                                                  shiny::HTML("Images with an orange background depict all projection neurons of a moadlity, in grey all neurons of a tract, and in white individual anatomy groups"),
                                                   fluidRow(
-                                                    shiny::HTML("Images with an orange background depict all projection neurons of a moadlity, in grey all neurons of a tract, and in white individual anatomy groups"),
                                                     lapply(1:length(PN_images), function(i) {
                                                       column(3,tags$button(
                                                         id = PN_images[i],
@@ -220,15 +220,17 @@ tabPanel("data viewer",
                       ),
                       tabPanel("uniglomerular PN responses",
                                shiny::br(),
-                               plotly::plotlyOutput("PNCalicumResponses", width = "1000px", height = "1000px"),
+                               plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
                                shiny::br(),
-                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <b><strong>NP225-Gal4</strong></b> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel al. 2017)</a>.</i>")
+                               shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <b><strong>NP225-Gal4</strong></b> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel al. 2017)</a>.</i>"),
+                               shiny::br()
                       ),
                       tabPanel("predicted connectivity",
-                               plotly::plotlyOutput("Overlap", width = "1000px", height = "1000px"),
+                               plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
                                shiny::br(),
                                shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
-                                           normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>")
+                                           normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>"),
+                               shiny::br()
                       ),
                       tabPanel("functional connectivity",
                                shiny::br(),
@@ -484,12 +486,18 @@ tabPanel("the lateral horn",
                 This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>,
                 and aims to bring together datasets that enrich our knowledge of cell types of the lateral horn"
                       ),
+          shiny::br(),
+          shiny::br(),
+          shiny::br(),
+          shiny::div(shiny::HTML('<iframe src="https://www.youtube.com/embed/blFk1rGZLCU" width="840" height="630" frameborder="0" allowfullscreen> </iframe>'),align="center"),
           h3("R tools"),
           shiny::HTML("We have developed a <a href='https://github.com/jefferislab' target='_blank'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
                       Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/' target='_blank'>here</a>. 
                       You can also use NBLAST with data from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a> without needed to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>NBLAST-on-the-fly</a> by James Manton."),
           shiny::br(),
-          shiny::div(shiny::HTML('<iframe width="420px" height="345px" src="https://www.youtube.com/watch?v=tyg6kbixuaM" frameborder="0" allowfullscreen></iframe>'),align="center"),
+          shiny::br(),
+          shiny::br(),
+          shiny::div(shiny::HTML('<iframe src="https://www.youtube.com/embed/Ck0Fyefh4S0" width="840" height="630" frameborder="0" allowfullscreen> </iframe>'),align="center"),
           h3("Source code"),
           shiny::HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab' target='_blank'>GitHub</a>."),
           h3("Preparing own data"),
@@ -531,6 +539,12 @@ tabPanel("the lateral horn",
                       It relies on light-level data collected by Gregory Jefferis, Shahar Frechter, Michael-John Dolan (along with the FlyLight team at Janelia Research Campus), Ann-Shyn Chiang's group, Mehmet Fişek and Jamie Jeanne and collated by Alex Bates, 
                       and EM data reconstructed primarily by Alex Bates, Ruairi Roberts, Philipp Schlegel and Gregory Jefferis using a nanoscale resolution dataset for a single adult female fly brain from the Bock group at Janelia Research Campus <a href='https://www.ncbi.nlm.nih.gov/pubmed/30033368' target='_blank'>(Zheng et al. 2018)</a>."
           ),
+          h3("On the horizon - an introduction to connectomic data"),
+          shiny::br(),
+          shiny::br(),
+          shiny::br(),
+          shiny::div(shiny::HTML('<iframe src="https://www.youtube.com/embed/S2yFegvbPfQ" width="840" height="630" frameborder="0" allowfullscreen> </iframe>'),align="center"),
+          
           shiny::hr()
         )
   )

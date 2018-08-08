@@ -1289,17 +1289,17 @@ shinyServer(function(input, output, session) {
    })
 
   output$Overlap <- plotly::renderPlotly({
-     heatmaply::heatmaply(x = t(lhns.gloms.overlap),
+     heatmaply::heatmaply(x = t(lhlite::lhns.gloms.overlap),
                           ylab = "core lateral horn neurons", xlab = "uniglomerular PNs",
                           colors = colorRampPalette(colors = c("white", united.orange, "darkred")),
                           margins = c(100,100,40,20))
   })
 
   output$Jeanne <- plotly::renderPlotly({
-    heatmaply::heatmaply(x = t(lhlite::jeanne.func.conn),
-                         xlab = "lateral horn neurons", ylab = "uniglomerular PNs",
+    heatmaply::heatmaply(x = lhlite::jeanne.func.conn,
+                         ylab = "lateral horn neurons", xlab = "uniglomerular PNs",
                          colors = colorRampPalette(colors = c("grey","white", united.orange, "darkred")),
-                         margins = c(100,100,40,20), Colv = lhlite::jeanne.clust)
+                         margins = c(100,100,40,20), Rowv = lhlite::jeanne.clust)
   })
   
 })
