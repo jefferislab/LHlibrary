@@ -6,7 +6,7 @@
 # Load the packages we need for this App
 source("init.R")
 source("functions.R")
-
+options(warn=-1) # Turns warnings off
 
 shinyServer(function(input, output, session) {
   
@@ -960,12 +960,16 @@ shinyServer(function(input, output, session) {
   
   # Get tracing and perform NBLAST
   observeEvent(input$NBLASTGO, {
-    if(input$QueryType=="UserUpload"){
-      if(input$UploadedSkeletons!="no user uploaded neurons"){
+    if(input$QueryType=="UserUpload"|!input$NBLAST_ChooseID%in%rownames(lhlite::lh_nblast)){
+      if(input$UploadedSkeletons!="no user uploaded neurons"&input$QueryType=="UserUpload"){
         vals$NBLAST$tracings =  nat::dotprops(vals$neurons[input$UploadedSkeletons])
-      }else{
+      } else if (input$QueryType=="UserUpload"){
         vals$NBLAST$tracings = NULL
-      }  
+      } else if (!input$NBLAST_ChooseID%in%rownames(lhlite::lh_nblast)) {
+        vals$NBLAST$tracings =  nat::dotprops(vals$neurons[input$NBLAST_ChooseID])
+      } else {
+        vals$NBLAST$tracings = NULL
+      }
       # Get the NBLAST tracing scores for the uploaded object
       isolate({ 
         query_neurons.dps <- vals$NBLAST$tracings

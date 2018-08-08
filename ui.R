@@ -73,7 +73,9 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                   })
                                                 ),
                                          tabPanel("projection neurons",
-                                                  shiny::HTML("Images with an orange background depict all projection neurons of a moadlity, in grey all neurons of a tract, and in white individual anatomy groups"),
+                                                  shiny::br(),
+                                                  shiny::HTML("Images with an orange background depict all projection neurons of a modality, in grey all neurons of a tract, and in white individual anatomy groups"),
+                                                  shiny::br(),
                                                   fluidRow(
                                                     lapply(1:length(PN_images), function(i) {
                                                       column(3,tags$button(
@@ -484,7 +486,7 @@ tabPanel("the lateral horn",
           shiny::HTML("Olfactory information in <i>Drosophila melanogaster</i> may be processed by as few as three synapses before engaging motor programmes. Previous research has largely focused on the more superficial components of this shallow system.
                 In the the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/' target='_blank'> Jefferis group</a> at the <a href='https://www2.mrc-lmb.cam.ac.uk/' target='_blank'>MRC LMB</a> in Cambridge, UK, we aim to describe the internal circuitry of the lateral horn (LH), the insect analogue of the mammalian cortical amygdala.
                 This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>,
-                and aims to bring together datasets that enrich our knowledge of cell types of the lateral horn"
+                and aims to bring together datasets that enrich our knowledge of cell types of the lateral horn."
                       ),
           shiny::br(),
           shiny::br(),
@@ -493,7 +495,7 @@ tabPanel("the lateral horn",
           h3("R tools"),
           shiny::HTML("We have developed a <a href='https://github.com/jefferislab' target='_blank'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
                       Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/' target='_blank'>here</a>. 
-                      You can also use NBLAST with data from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a> without needed to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>NBLAST-on-the-fly</a> by James Manton."),
+                      You can also use NBLAST with data from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a> without needing to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>NBLAST-on-the-fly</a> by James Manton."),
           shiny::br(),
           shiny::br(),
           shiny::br(),
@@ -505,7 +507,7 @@ tabPanel("the lateral horn",
                       We recommend the use of <a href='http://fiji.sc/Simple_Neurite_Tracer' target='_blank'>Simple Neurite Tracer</a> for tracing neurons from the acquired images, detailed instructions for which are available from <a href='http://fiji.sc/Simple_Neurite_Tracer:_Step-By-Step_Instructions' target='_blank'>here</a>.
                       In order to see single cell morphologies in genetic lines that label multiple neurons per brain, <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MultiColor FlpOut (MCFO)</a> is recommended."),
           h3("Split-GAL4 lines"),
-          shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi' target='_blank'>here</a>"),
+          shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi' target='_blank'>here</a>."),
           h3("Data sources"),
           shiny::br(),          
           shiny::HTML("<b><strong>1.</strong></b> Frechter, S., Bates, A.S., Tootoonian, S., Dolan, M.-J., Manton, J.D., Jamasb, A., Kohl, J., Bock, D., and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
