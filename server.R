@@ -813,10 +813,10 @@ shinyServer(function(input, output, session) {
     textInput(inputId = "CATMAID_server", label = "server:", value = vals$CATMAID$CATMAID_server, width = NULL, placeholder = "Enter CATMAID server")
   })
   output$CATMAID_detail_authname <- renderUI({
-    textInput(inputId = "CATMAID_authname", label = "CATMAID author:", value = vals$CATMAID$CATMAID_authname, width = NULL, placeholder = "Enter CATMAID author username")
+    textInput(inputId = "CATMAID_authname", label = "CATMAID authorisation username:", value = vals$CATMAID$CATMAID_authname, width = NULL, placeholder = "Enter CATMAID author username")
   })
   output$CATMAID_detail_authpassword <- renderUI({
-    textInput(inputId = "CATMAID_authpassword", label = "CATMAID password:", value = vals$CATMAID$CATMAID_authpassword, width = NULL, placeholder = "Enter CATMAID author password")
+    textInput(inputId = "CATMAID_authpassword", label = "CATMAID authorisation password:", value = vals$CATMAID$CATMAID_authpassword, width = NULL, placeholder = "Enter CATMAID author password")
   })
   output$CATMAID_detail_token <- renderUI({
     textInput(inputId = "CATMAID_token", label = "CATMAID token:", value = vals$CATMAID$CATMAID_token, width = NULL, placeholder = "Enter CATMAID token")
@@ -863,7 +863,10 @@ shinyServer(function(input, output, session) {
         for(tracingfile in 1:length(input$TracingFile$name)){ # If multiple selected
           query_neuron <- input$TracingFile
           progress$inc(1/3, detail = "reading neurons")
-          if(is.null(query_neuron)) return(NULL)
+          if(is.null(query_neuron)){
+            shiny::showNotification("No file selected.")
+            return(NULL)
+          }
           if(grepl("\\.nrrd", query_neuron$name[tracingfile])) { # TODO come up with a heuristic to choose the number of neighbours (k) based on the voxel dimensions
             tracing_neurons <-  c(tracing_neurons,dotprops_from_nrrd(query_neuron$datapath[tracingfile], k=10))
           } else {
