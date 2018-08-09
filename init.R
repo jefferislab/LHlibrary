@@ -1,7 +1,7 @@
 # Also set some options
-rm(list = ls())
+#rm(list = ls())
 options(rgl.useNULL=TRUE)
-options(warn=-1) # Turns warnings off
+#options(warn=-1) # Turns warnings off
 
 # R packages we need for this lateralhorn app
 library(shiny)
@@ -41,17 +41,26 @@ mod_pns[mod_pns=="Olfactory+Gustatory"] = "Olfactory\\+Gustatory"
   
 # PNT image paths
 PNT_images = paste0("RGLsnapshots/PNT/",list.files("www/RGLsnapshots/PNT"))
-AG_images =  paste0("www/RGLsnapshots/AG/",list.files("www/RGLsnapshots/AG"))
+AG_images =  paste0("images/RGLsnapshots/AG/",list.files("images/RGLsnapshots/AG"))
 CT_images = paste0("RGLsnapshots/CT/",list.files("www/RGLsnapshots/CT"))
 MOD_images = paste0("RGLsnapshots/PNmodality/",list.files("www/RGLsnapshots/PNmodality"))
 TRACT_images = paste0("RGLsnapshots/PNtract/",list.files("www/RGLsnapshots/PNtract"))
 PNAG_images = paste0("RGLsnapshots/PNAG/",list.files("www/RGLsnapshots/PNAG"))
 PN_images = c(MOD_images,TRACT_images,PNAG_images)
 PN_images = unlist(sapply(mod_pns,function(x) PN_images[grepl(paste0(x,"_"),PN_images)]))
-split_brain_images = paste0("maxprojections/Brain/",list.files("www/maxprojections/Brain/"))
+split_brain_images = paste0("images/maxprojections/Brain/",list.files("images/maxprojections/Brain/"))
 split_brain_images = split_brain_images[!grepl("ntitled",split_brain_images)]
-split_vnc_images = paste0("maxprojections/VNC/",list.files("www/maxprojections/VNC/"))
+split_vnc_images = paste0("images/maxprojections/VNC/",list.files("images/maxprojections/VNC/"))
 split_vnc_images = split_vnc_images[!grepl("ntitled|creenshot",split_vnc_images)]
+
+# Low res images
+split_brain_images_low = paste0("maxprojections_lowres/Brain/",list.files("www/maxprojections_lowres/Brain/"))
+split_brain_images_low = split_brain_images_low[!grepl("ntitled",split_brain_images_low)]
+split_vnc_images_low = paste0("maxprojections_lowres/VNC/",list.files("www/maxprojections_lowres/VNC/"))
+split_vnc_images_low = split_vnc_images_low[!grepl("ntitled|creenshot",split_vnc_images_low)]
+
+
+# linecodes
 lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
 lines = intersect(lhlite::lh_line_info$linecode,lines) # Some lines are lost...
 

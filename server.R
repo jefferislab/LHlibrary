@@ -23,6 +23,7 @@ shinyServer(function(input, output, session) {
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
   vals$split_brain_images_chosen = split_brain_images
+  vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
   
   ############
@@ -32,14 +33,14 @@ shinyServer(function(input, output, session) {
   lapply(1:length(pnt_lhns), function(i) {
     output[[paste0("Carousel",pnt_lhns[i])]] <- renderSlickR({
       images = AG_images[grepl(paste0(pnt_lhns[i],"[a-z]"),AG_images)]
-      slickR(obj = images,height = '100%',width='100%')
+      slickR(obj = images, width = "1000px", height = "100%")
     })
   })
   
   lapply(1:length(PN_images), function(i) {
     observeEvent(input[[PN_images[i]]], {
-      showModal(modalDialog(
-        img(src = PN_images[i],height = "470px",width="879px",align = "center")
+      showModal(modalDialog(size = "l",
+        img(src = PN_images[i],height = "100%",width="100%",align = "center")
       ))
     })
   })
@@ -49,14 +50,20 @@ shinyServer(function(input, output, session) {
   # Splitline Modal #
   ###################
   
+  # Modal to display high res split images
   lapply(1:length(lines), function(i) {
     observeEvent(input[[lines[i]]], {
       showModal(modalDialog(
         title = lines[i],
         size = "l",
         tabsetPanel(type = "tabs",
-                    tabPanel("brain", img(src = split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)],height = "100%",width="100%",align = "center")),
-                    tabPanel("VNC", img(src = split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)],height = "100%",width="100%",align = "center"))
+                    tabPanel("brain", 
+                             #shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 100px; z-index: -0;'>Loading...</div>"),
+                             #shiny::HTML("<div style='position: absolute; left: 220px; top: 150px; z-index: 0; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+                             shiny::div(
+                               style=paste0("z-index: 1000;"),
+                               imageOutput(paste0(lines[i],"_brain_high")))),
+                    tabPanel("VNC", imageOutput(paste0(lines[i],"_VNC_high")))
         ),
         shiny::br(),
         shiny::fluidRow(
@@ -82,6 +89,7 @@ shinyServer(function(input, output, session) {
     })
   })
   
+  # Choose the split line images we want
   observeEvent({input$splittype
                input$splitNT},{
                vals$split_brain_images_chosen = split_brain_images
@@ -93,22 +101,60 @@ shinyServer(function(input, output, session) {
                  lines_chosen = unique(as.character(subset(lhlite::lh_line_info[lines,],grepl(input$splitNT,neurotransmitter))$linecode))
                  vals$split_brain_images_chosen = vals$split_brain_images_chosen[as.logical(rowSums(sapply(lines_chosen,function(x) grepl(paste0(x,".jpg"),vals$split_brain_images_chosen))))]
                }
+               vals$split_brain_images_low = gsub("images/maxprojections","maxprojections_lowres",vals$split_brain_images_chosen)
   })
   
+  # Low res image grid
   output$imageGrid <- renderUI({
     fluidRow(
-         lapply(1:length(vals$split_brain_images_chosen), function(i) {
+         lapply(1:length(vals$split_brain_images_low), function(i) {
            column(4,
-             shiny::strong(sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i]),
+             shiny::strong(sapply(vals$split_brain_images_low, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i]),
              tags$button(
-             id = sapply(vals$split_brain_images_chosen, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i],
+             id = sapply(vals$split_brain_images_low, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))[i],
              class = "btn action-button",
-             tags$img(src = vals$split_brain_images_chosen[i],height = "100%",width="100%")
+             tags$img(src = vals$split_brain_images_low[i],height = "100%",width="100%")
            ))
          })
     )
   })
   
+  # Don't cache the high res brain images in the browser
+  lapply(1:length(lines), function(i){
+    output[[paste0(lines[i],"_brain_high")]] <- renderImage({
+      filename <- paste0(split_brain_images[grepl(paste0(lines[i],".jpg"),split_brain_images)])
+            list(src = filename,
+                 alt = paste0(lines[i]," no image available"),
+                 height = "100%",
+                 width = "100%",
+                 align = "center"
+           )
+    }, deleteFile = FALSE)
+  })
+  
+  # Don't cache the high res VNC images in the browser
+  lapply(1:length(lines), function(i){
+    output[[paste0(lines[i],"_VNC_high")]] <- renderImage({
+      filename <- paste0(split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)])
+      list(src = filename,
+           alt = paste0(lines[i]," no image available"),
+           height = "100%",
+           width = "100%",
+           align = "center"
+      )
+    }, deleteFile = FALSE)
+  })
+  
+  lapply(CT_images, function(i){
+    output[[paste0("see:",i)]] <- renderImage({
+          list(src = paste0("www/",i),
+           alt = i,
+           height = "100%",
+           width = "100%",
+           align = "center"
+      )
+    }, deleteFile = FALSE)
+  })
 
   ###############
   # Get Neurons #

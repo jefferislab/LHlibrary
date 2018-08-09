@@ -21,7 +21,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
             shiny::h3("the lateral horn library",align="left"),
             shiny::br(),
             shiny::HTML("Welcome to the <a href='https://en.wikipedia.org/wiki/Lateral_horn_of_insect_brain' target='_blank'>lateral horn</a> of the <a href='https://en.wikipedia.org/wiki/Drosophila_melanogaster' target='_blank'>vinegar fly</a> brain. In short, the lateral horn is a brain area in the insect that is thought to help generate innate behaviours in response to different odours.
-                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <b><strong>data viewer </strong></b>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>.
+                        Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <b><strong>data viewer</strong></b>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>.
                         Neurons of the lateral horn are named by a hierarchical classification system. They are each classified into a <b><strong>primary neurite cluster</strong></b>, <b><strong>anatomy group</strong></b>
                         and finally <b><strong>cell type</strong></b>. See the <b><strong>naming system</strong></b> tab for details. The <b><strong>data viewer</strong></b> tab lets you display these morphologies in 3D, access data on neurons' odour responses and
                         search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>."),
@@ -44,29 +44,34 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                       column(3,tags$button(
                                                         id = pnt_lhns[i],
                                                         class = "btn action-button",
-                                                        tags$img(src = PNT_images[grepl(paste0(pnt_lhns[i],"_"),PNT_images)][1],height = "313px",width="586px")
+                                                        tags$img(src = PNT_images[grepl(paste0(pnt_lhns[i],"_"),PNT_images)][1],height = "100%",width="600px")
                                                       ))
                                                     })
                                                   ),
                                                   #tags$head(tags$style(".modal-dialog{ width:923px}")), # Will this affect modals elsewhere in the app?
                                                   #tags$head(tags$style(".modal-body{ height:600px}")),
-                                                  tags$head(tags$style(HTML('.modal-lg { width: 923px;'))),
+                                                  tags$head(tags$style(HTML('.modal-lg { width: 1100px;'))),
                                                   tags$head(tags$style(HTML('.modal-lg { height: 750px;'))),
+                                                  #includeCSS("loader.css"), # Load spinny waiting wheel
                                                   lapply(1:length(pnt_lhns), function(i) {
                                                     shinyBS::bsModal(id = paste0("AG_modal_",pnt_lhns[i]), title = pnt_lhns[i], trigger = pnt_lhns[i], size = "large",
-                                                                     slickR::slickROutput(paste0("Carousel",pnt_lhns[i]), width = 879, height = 469),
+                                                                     #shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 420px; z-index: 0;'>Loading...</div>"),
+                                                                     #shiny::HTML("<div style='position: absolute; left: 220px; top: 350px; z-index: 0; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+                                                                     shiny::div(slickR::slickROutput(paste0("Carousel",pnt_lhns[i]), width = 1000, height = 534),align="center"),
                                                                      br(),
                                                                      br(),
                                                                      p("These are all the lateral horn neuron ",strong("anatomy groups")," in",pnt_lhns[i]," primary neurite cluster. Below, you can see individual", strong("cell types"),align = "center"),
                                                                      br(),
                                                                      br(),
                                                                      lapply(1:length(CT_images[grepl(paste0(pnt_lhns[i],"[a-z]"),CT_images)]), function(j) {
-                                                                       shiny::div(style=paste0("display:§inline-block; position: absolute; left: 10px; top: ",700+((j-1)*500),"px ; z-index: -10000; "),
+                                                                       shiny::div(style=paste0("display:§inline-block; position: absolute; left: 10px; top: ",750+((j-1)*650),"px ; z-index: -10000; "),
                                                                                   tags$button(
                                                                                     id = paste0(i,"_",j),
                                                                                     class = "btn action-button",
-                                                                                    tags$img(src = CT_images[grepl(paste0(pnt_lhns[i],"[a-z]"),CT_images)][j],height = "469px",width="879px")
-                                                                                  )
+                                                                                    #imageOutput(paste0("see:",CT_images[grepl(paste0(pnt_lhns[i],"[a-z]"),CT_images)][j]))
+                                                                                    tags$img(src = CT_images[grepl(paste0(pnt_lhns[i],"[a-z]"),CT_images)][j],height = "648px",width="1000px")
+                                                                                  ),
+                                                                                  align = "center"
                                                                        )
                                                                      })
                                                     )
@@ -81,7 +86,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                       column(3,tags$button(
                                                         id = PN_images[i],
                                                         class = "btn action-button",
-                                                        tags$img(src = PN_images[i],height = "313px",width="586px")
+                                                        tags$img(src = PN_images[i],height = "100%",width="600px")
                                                       ))
                                                     })
                                                   )
@@ -89,7 +94,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                              )
             ),
             conditionalPanel(condition="input.AtlasContent =='split-GAL4 lines'",
-                             fluidRow(
+                            shiny::fluidRow(
                                column(3,
                                  shiny::radioButtons("splittype", label = "type",choices = list("all" = "all", "LH output neurons" = "ON", "LH local neurons" = "LN", "LH input neurons" = "IN"), selected = "all")
                                 ),
@@ -97,7 +102,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                  shiny::radioButtons("splitNT", label = "transmitter",choices = list("all" = "all", "Acetylcholine" = "ChA", "GABA" = "GABA", "Glutamate" = "Vglut", "Unknown" = "Unknown"), selected = "all")
                                )
                              ),
-                            uiOutput("imageGrid")
+                            shiny::uiOutput("imageGrid")
             ),
             shiny::hr()
   ),
