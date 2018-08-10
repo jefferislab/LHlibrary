@@ -264,3 +264,9 @@ resamplecatmaidneuron <- function (x, stepsize = 1, ...) {
   r$connectors = c
   r
 }
+
+
+
+
+
+
