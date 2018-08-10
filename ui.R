@@ -182,6 +182,7 @@ tabPanel("data viewer",
           # Output: Tabset
           tabsetPanel(type = "tabs",
                       tabPanel("3D",
+                              rgl::playwidgetOutput("braintoggle"),
                               rgl::rglwidgetOutput("plot3D", width="1200px", height="700px"),
                               uiOutput("MainTable")
                       ),

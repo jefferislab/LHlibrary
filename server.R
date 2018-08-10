@@ -7,8 +7,15 @@
 source("init.R")
 source("functions.R")
 
+
 shinyServer(function(input, output, session) {
   
+  #######
+  # RGL #
+  #######
+  
+  save <- options(rgl.inShiny = TRUE)
+  on.exit(options(save))
   
   ####################
   # Reactive Objects #
@@ -25,6 +32,7 @@ shinyServer(function(input, output, session) {
   vals$split_brain_images_chosen = split_brain_images
   vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
+  vals$brainplot = NULL
   
   ############
   # Carousel #
@@ -281,9 +289,10 @@ shinyServer(function(input, output, session) {
     # Clear the space
     rgl::clear3d()
     # Plot brain
-    if(input$BrainMesh){
-      rgl::plot3d(FCWBsmooth, alpha = 0.1,skipRedraw = TRUE)
-    }
+    vals$brainplot <- rgl::plot3d(FCWBsmooth, alpha = 0.1,skipRedraw = TRUE)[1]
+    # if(!input$BrainMesh){
+    #    rgl::pop3d()
+    # }
     if(length(input$neuropils)>0){
       if("all neuropils"%in%input$neuropils) {
         rgl::plot3d(subset(newFCWBNP.surf, NULL), alpha = 0.2,skipRedraw = TRUE)
@@ -307,8 +316,23 @@ shinyServer(function(input, output, session) {
     # Set 3D view
     rgl::rgl.viewpoint(userMatrix=vals$um,zoom=vals$zoom)
     #frontalView()
-    rgl::rglwidget()
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","PNTtoggle"))
   })
+  
+  output$braintoggle <- renderPlaywidget({
+    toggleWidget("plot3D", respondTo = "BrainMesh",
+                 ids = vals$brainplot)
+  })
+  
+  output$PNTtoggle <- renderPlaywidget({
+    toggleWidget("plot3D", respondTo = "BrainMesh",
+                 ids = vals$brainplot)
+  })
+  
+  # output$neurontoggle <- renderPlaywidget({
+  #   toggleWidget("plot3D", respondTo = "BrainMesh",
+  #                ids = vals$brainplot)
+  # })
   
   ########################
   # Neuron Selection Table #
