@@ -33,7 +33,10 @@ pnt_all = sort(unique(all.lh.neurons[,"pnt"]))
 pnt_all = pnt_all[pnt_all!=""&pnt_all!=" "]
 pnt_choices = list(`Anterior dorsal`=pnt_all[grepl("^ad",pnt_all)],`Anterior ventral`=pnt_all[grepl("^av",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pd",pnt_all)],`Posterior dorsal`=pnt_all[grepl("^pv",pnt_all)]) 
 pnt_choices = pnt_choices[pnt_choices!=""&pnt_choices!=" "]
-pnt_lhns = sort(names(lhlite::primary.neurite.tracts))
+pnt_lhns = c("AD1", "AD2", "AD3", "AD4", "AD5", "AV1", "AV2", "AV3", "AV4", 
+             "AV5", "AV6", "AV7", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", 
+             "PD7", "PV1", "PV2", "PV3", "PV4", "PV5", "PV6", "PV7", "PV8", "PV9", "PV10", "PV11", "PV12")
+#sort(names(lhlite::primary.neurite.tracts))
 ag_lhns = sort(unique(all.lh.neurons[,"anatomy.group"]))
 mod_pns = c("Centrifugal", "Gustatory", "Mechanosensation", "Memory", "Neuromodulatory", 
             "Olfactory", "Olfactory+Gustatory", "Thermosensory", "Unknown")

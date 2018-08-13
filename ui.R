@@ -156,11 +156,9 @@ tabPanel("data viewer",
                # Choose which primary neurite tractsw to plot
                strong("see primary neurite tracts: "%>%label.help("lbl_pnts")),
                br(),
-               bootstrapPage(
-                 lapply(1:length(pnt_lhns), function(i){
-                   div(style="display:inline-block",checkboxInput(inputId=paste0("PNT",i), value=NULL, label = pnt_lhns[i]))
-                 })
-                ),
+               lapply(1:length(pnt_lhns), function(i){
+                   div(style="display:inline-block",checkboxInput(inputId=paste0("PNT",pnt_lhns[i]), value=FALSE, label = pnt_lhns[i]))
+               }),
                shiny::br(),
                checkboxInput(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE),
                shiny::hr(),
@@ -183,6 +181,9 @@ tabPanel("data viewer",
           tabsetPanel(type = "tabs",
                       tabPanel("3D",
                               rgl::playwidgetOutput("braintoggle"),
+                              lapply(pnt_lhns, function(pnt){
+                                rgl::playwidgetOutput(paste0(pnt,"toggle"))
+                              }),
                               rgl::rglwidgetOutput("plot3D", width="1200px", height="700px"),
                               uiOutput("MainTable")
                       ),

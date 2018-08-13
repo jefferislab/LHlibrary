@@ -33,6 +33,8 @@ shinyServer(function(input, output, session) {
   vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
   vals$brainplot = NULL
+  vals$pnttext = NULL
+  vals$pntids = NULL
   
   ############
   # Carousel #
@@ -288,6 +290,8 @@ shinyServer(function(input, output, session) {
   output$plot3D <- renderRglwidget({
     # Clear the space
     rgl::clear3d()
+    # Set 3D view
+    rgl::rgl.viewpoint(userMatrix=vals$um,zoom=vals$zoom)
     # Plot brain
     vals$brainplot <- rgl::plot3d(FCWBsmooth, alpha = 0.1,skipRedraw = TRUE)[1]
     # if(!input$BrainMesh){
@@ -303,31 +307,36 @@ shinyServer(function(input, output, session) {
     # Generate and plot neuron selection
     neurons = vals$neurons
     if(length(neurons)>0){
-      neurons = update_neurons(input=input,db=neurons)
+      #neurons = update_neurons(input=input,db=neurons)
       rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE)
     }
-    # Plot PNTs if selected
-    pnts_to_plot = c(input$PNT1,input$PNT2,input$PNT3,input$PNT4,input$PNT5,input$PNT6,input$PNT7,input$PNT8,input$PNT9,input$PNT10,
-                     input$PNT11,input$PNT12,input$PNT13,input$PNT14,input$PNT15,input$PNT16,input$PNT17,input$PNT18,input$PNT19,input$PNT20,
-                     input$PNT21,input$PNT22,input$PNT23,input$PNT24,input$PNT25,input$PNT26,input$PNT27,input$PNT28,input$PNT29,input$PNT30,input$PNT31)
-    if(sum(pnts_to_plot)>0){
-      plot_pnt(pnts_to_plot) 
-    }
-    # Set 3D view
-    rgl::rgl.viewpoint(userMatrix=vals$um,zoom=vals$zoom)
-    #frontalView()
-    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","PNTtoggle"))
+    # Plot PNTs 
+    pntids <- unlist(rgl::plot3d(lhlite::primary.neurite.tracts, soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE))
+    pxyz = t(sapply(lhlite::primary.neurite.tracts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
+    rownames(pxyz) = gsub(pattern = "LH|lh", "", names(lhlite::primary.neurite.tracts))
+    pnttext <- sapply(pnt_lhns, function(pnt){
+      rgl::text3d(pxyz[pnt,]+c(-3, 3, 0), texts = pnt)[1]
+    })
+    names(pnttext) <- paste0(pnt_lhns,".text")
+    vals$pntids <- c(pntids,pnttext)
+    # Make widget
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle",paste0(pnt_lhns,"toggle")))
   })
   
   output$braintoggle <- renderPlaywidget({
-    toggleWidget("plot3D", respondTo = "BrainMesh",
+    rgl::toggleWidget("plot3D", respondTo = "BrainMesh",
                  ids = vals$brainplot)
+  })
+    
+  lapply(pnt_lhns,function(pnt){
+    output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
+      ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
+      #dput(ids)
+      rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),
+                        ids = ids)
+    })
   })
   
-  output$PNTtoggle <- renderPlaywidget({
-    toggleWidget("plot3D", respondTo = "BrainMesh",
-                 ids = vals$brainplot)
-  })
   
   # output$neurontoggle <- renderPlaywidget({
   #   toggleWidget("plot3D", respondTo = "BrainMesh",
