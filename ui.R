@@ -231,6 +231,7 @@ tabPanel("data viewer",
                                actionButton("BACKline",NULL,icon=icon("angle-left"),lib="font-awesome"),
                                actionButton("NEXTline",NULL,icon =icon("angle-right",lib="font-awesome")),
                                shiny::br(),
+                               shiny::br(),
                                tabsetPanel(type = "tabs",
                                            tabPanel("brain", imageOutput("MaximalProjection")),
                                            tabPanel("VNC", imageOutput("VNCMaximalProjection"))

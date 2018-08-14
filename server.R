@@ -1413,7 +1413,7 @@ shinyServer(function(input, output, session) {
     }else{
       LineCode = input$LineCode
     }
-    maxprojection = split_brain_images[grepl(LineCode,split_brain_images)]
+    maxprojection = split_brain_images[grepl(paste0(LineCode,"\\."),split_brain_images)]
     return(list(
       src = maxprojection,
       filetype = "image/jpeg",width = "auto", height = "auto"
@@ -1422,13 +1422,13 @@ shinyServer(function(input, output, session) {
   
   output$VNCMaximalProjection <- renderImage({
     if(is.null(input$LineCode)){
-      LineCode = "L991"
+      LineCode = "L2239"
     } else if (is.na(input$LineCode)) {
-      LineCode = "L991"
+      LineCode = "L2239"
     }else{
       LineCode = input$LineCode
     }
-    maxprojection = split_vnc_images[grepl(LineCode,split_vnc_images)]
+    maxprojection = split_vnc_images[grepl(paste0(LineCode,"\\."),split_vnc_images)]
     return(list(
       src = maxprojection,
       filetype = "image/jpeg",width = "auto", height = "auto"
