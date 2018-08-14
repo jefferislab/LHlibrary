@@ -43,14 +43,6 @@ get_neurons<-function(input, db){
   neurons
 }
 
-# Update the neuron selection
-update_neurons <- function(input,db){
-  if(!is.null(input$SelectionTable_rows_selected)){ # Don't show neurons highlighted in selection table
-    db = db[-input$SelectionTable_rows_selected]
-  }
-  db
-}
-
 # Define a function for a frontal view of the brain
 frontalView<-function(zoom=0.6){
   um=structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L))

@@ -35,6 +35,7 @@ shinyServer(function(input, output, session) {
   vals$brainplot = NULL
   vals$nids = NULL
   vals$pntids = NULL
+  vals$nextline = 1
   
   ############
   # Carousel #
@@ -323,7 +324,6 @@ shinyServer(function(input, output, session) {
     # Generate and plot neuron selection
     neurons = vals$neurons
     if(length(neurons)>0){
-      #neurons = update_neurons(input=input,db=neurons)
       vals$nids <- unlist(rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE))
     }
     # Plot PNTs 
@@ -901,7 +901,7 @@ shinyServer(function(input, output, session) {
                                    selectize = TRUE),
                        textInput(inputId = "CATMAID_search", label = "search neurons:", value = "", width = NULL, placeholder = "Enter CATMAID search term")
       ),
-      checkboxInput("TracingMirror", "flip brain-side", value=FALSE),
+      shinyWidgets::awesomeCheckbox("TracingMirror", "flip brain-side", value=FALSE,status="warning"),
       actionButton(inputId = "TracingUploaded",label = "upload",icon = icon("upload"))
     ),
     easyClose = TRUE
@@ -1347,6 +1347,49 @@ shinyServer(function(input, output, session) {
     selectInput("LineCodeCTs", label = paste0("cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })
   
+  # Reset line selelction
+  observeEvent(input$LineCodeCTs, {
+    vals$nextline = 1
+  })
+
+  # next line image
+  observeEvent(input$NEXTline, {
+    if(is.null(input$LineCodeCTs)){
+      LineCodeCTs = "PD2a1"
+    } else if (is.na(input$LineCodeCTs)) {
+      LineCodeCTs = "PD2a1"
+    }else{
+      LineCodeCTs = input$LineCodeCTs
+    }
+    linecodes = sort(unique(as.character(subset(lhlite::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
+    index = vals$nextline + 1
+    if(index>length(linecodes)){
+      index = length(linecodes)
+    } else if (index<1){
+      index = 1
+    }
+    vals$nextline = index
+  })
+
+  # back a line image
+  observeEvent(input$BACKline, {
+    if(is.null(input$LineCodeCTs)){
+      LineCodeCTs = "PD2a1"
+    } else if (is.na(input$LineCodeCTs)) {
+      LineCodeCTs = "PD2a1"
+    }else{
+      LineCodeCTs = input$LineCodeCTs
+    }
+    linecodes = sort(unique(as.character(subset(lhlite::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
+    index = vals$nextline - 1
+    if(index>length(linecodes)){
+      index = length(linecodes)
+    } else if (index<1){
+      index = 1
+    }
+    vals$nextline = index
+  })
+  
   output$LineCode <- renderUI({
     if(is.null(input$LineCodeCTs)){
       LineCodeCTs = "PD2a1"
@@ -1356,8 +1399,9 @@ shinyServer(function(input, output, session) {
       LineCodeCTs = input$LineCodeCTs
     }
     linecodes = sort(unique(as.character(subset(lhlite::lh_line_info,grepl(as.character(LineCodeCTs),as.character(cell.type)))[,"linecode"])))
+    index = as.numeric(vals$nextline)
     if(!is.null(lines)&length(lines)>0){
-      selectInput("LineCode", label = paste0("split-GAL4 lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[1], multiple=FALSE, selectize=TRUE,  width = 500)
+      selectInput("LineCode", label = paste0("split-GAL4 lines with selected cell type (",length(linecodes),") :"), choices = linecodes, selected = linecodes[index], multiple=FALSE, selectize=TRUE,  width = 500)
     }
   })
      
@@ -1371,7 +1415,7 @@ shinyServer(function(input, output, session) {
     }
     maxprojection = split_brain_images[grepl(LineCode,split_brain_images)]
     return(list(
-      src = paste0("www/",maxprojection),
+      src = maxprojection,
       filetype = "image/jpeg",width = "auto", height = "auto"
     ))
   }, deleteFile = FALSE)
@@ -1386,7 +1430,7 @@ shinyServer(function(input, output, session) {
     }
     maxprojection = split_vnc_images[grepl(LineCode,split_vnc_images)]
     return(list(
-      src = paste0("www/",maxprojection),
+      src = maxprojection,
       filetype = "image/jpeg",width = "auto", height = "auto"
     ))
   }, deleteFile = FALSE)
