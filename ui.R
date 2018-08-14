@@ -122,14 +122,14 @@ tabPanel("data viewer",
                hr(),
                selectInput(inputId='SkeletonType', label='dataset:'%>%label.help("lbl_ds"), choices = sort(unique(all.lh.neurons[,"skeleton.type"])), selected = sort(unique(all.lh.neurons[,"skeleton.type"])), multiple=TRUE, selectize=TRUE),
                hr(),
-               selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = list(`example (FlyCircuit PD2a1)`="example",`LH ouput neurons`= "ON",`LH local neurons`= "LN",`LH input neurons`= "IN", `MBONs`= "MBON"), selected = list(`example (PD2a1)`="example"), multiple=FALSE, selectize=TRUE),
+               selectInput(inputId='Type', label='neuron type:'%>%label.help("lbl_nt"), choices = list(`example (FlyCircuit PD2a1)`="example",`LH neurons`= "LHN",`LH ouput neurons only`= "ON",`LH local neurons only`= "LN",`LH input neurons`= "IN", `MBONs`= "MBON"), selected = list(`example (PD2a1)`="example"), multiple=FALSE, selectize=TRUE),
                hr(),
-               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'", # Why does this sometimes work and sometimes not?
+               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'|input.Type =='LHN'", # Why does this sometimes work and sometimes not?
                                 h5("Select specific cell types"),
                                 uiOutput("LHNselection"),
                                 hr()
                ),
-               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'",
+               conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'|input.Type =='LHN'",
                   h5("search mushroom body output neuronssearch groups of lateral horn neurons"),
                   uiOutput("PNTselection"),
                   uiOutput("AGselection"),
@@ -194,7 +194,7 @@ tabPanel("data viewer",
                                 labelWidth = "200px",
                                 value = FALSE,
                                 onStatus = "warning", 
-                                offStatus = "cyborg"
+                                offStatus = "danger"
                               ),
                               uiOutput("MainTable")
                       ),
@@ -278,7 +278,7 @@ tabPanel("data viewer",
  tabPanel("NBLAST",
           sidebarLayout(
             sidebarPanel(
-              shiny::h2("NBLAST against the library"),
+              shiny::h2("NBLAST against the LH library"),
               shiny::HTML("Want to know what cell type your neuron belongs to? Or find a genetic line for it?
                    Choose a neuron from our library or a neuron you have uploaded and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a> it against our library.
                    If the checkbox below is ticked, both forwards and reverse scores will be calculated, normalised and averaged,
@@ -296,26 +296,39 @@ tabPanel("data viewer",
               uiOutput("NBLAST_ChooseFromLibrary"),
               uiOutput("NBLAST_ChooseID"),
               shiny::HTML("<i>If multiple neurons are chosen, NBLAST scores will be averaged across these neurons. I.e. they will be treated as one amalgamated neuron</i><br /><br />"),
-              sliderInput(inputId = "NumHits",label = "no. hits to visualise:", 1, 100, 10, 1),
-              checkboxInput("UseMean", label="Use mean scores", value= TRUE),
+              shinyWidgets::sliderTextInput(inputId = "NumHits",label = "no. hits to visualise:", choices = c(1:100), grid = TRUE, selected = 10),
+              shinyWidgets::awesomeCheckbox(inputId="UseMean", label="Use mean scores", value= TRUE,status="warning"),
               shiny::HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
                    This is particularly useful for clustering neurons into types, rather than,
                    for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
+              #shinyWidgets::awesomeCheckbox(inputId="NBLASTBrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
               actionButton("NBLASTGO","NBLAST")
               ),
           mainPanel(
             h2("3D view"),
             includeCSS("loader.css"),
             shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
-            shiny::HTML("<div style='position: absolute; left: 220px; top: 300px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
-            rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
+            shiny::HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+            #rgl::playwidgetOutput("NBLASTbraintoggle"),
+            #rgl::playwidgetOutput("NBLASTneurontoggle"),
+            rgl::rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
             conditionalPanel(condition = "output.tracing_nblast_complete",
                              h3("Score distribution"),
                              plotOutput("NBLAST_results_plot"),
                              h2("NBLAST results"),
-                             uiOutput("NBLAST_MainTable"),
-                             br(),
-                             downloadButton('NBLAST_results_download', 'Download all scores as CSV')
+                             shinyWidgets::switchInput(
+                               inputId = "NBLASTHIDE",
+                               label = "highlighted",
+                               offLabel = "hide",
+                               onLabel = "show",
+                               labelWidth = "200px",
+                               value = FALSE,
+                               onStatus = "warning", 
+                               offStatus = "danger"
+                             ),
+                             shiny::uiOutput("NBLAST_MainTable"),
+                             shiny::br(),
+                             shiny::downloadButton('NBLAST_results_download', 'Download all scores as CSV')
             )
           )
        )

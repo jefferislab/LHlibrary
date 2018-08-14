@@ -28,7 +28,7 @@ shinyServer(function(input, output, session) {
   vals$neurons <- subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
   vals$neuronsDF <- data.table::data.table(subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
-  vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
+  vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL, nids = NULL, brainplot = NULL)
   vals$split_brain_images_chosen = split_brain_images
   vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
@@ -196,7 +196,11 @@ shinyServer(function(input, output, session) {
   # Dynamically update LHN selection, depending on which data type is picked 
   output$LHNselection <- renderUI({
     if(input$Type%in%c("ON","LN","IN","MBON","LHN")){
-      LHN_choices =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
+      Type = input$Type
+      if(Type=="LHN"){
+        Type=c("LN","ON")
+      }
+      LHN_choices =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%Type)[,"cell.type"]))
       selectInput("lhns", label = paste0("cell types in dataset (",length(LHN_choices),") :"), choices = LHN_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
     }
   })
@@ -204,7 +208,11 @@ shinyServer(function(input, output, session) {
   # Dynamically update PNT selection, depending on which data type is picked 
   output$PNTselection <- renderUI({
     if(is_lhn_type(input$Type)){
-      PNT_all =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"pnt"]))
+      Type = input$Type
+      if(Type=="LHN"){
+        Type=c("LN","ON")
+      }
+      PNT_all =  sort(unique(subset(all.lh.neurons,skeleton.type%in%input$SkeletonType&type%in%Type)[,"pnt"]))
       PNT_choices = list(`Anterior dorsal`=PNT_all[grepl("^AD",PNT_all)],`Anterior ventral`=PNT_all[grepl("^AV",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PD",PNT_all)],`Posterior dorsal`=PNT_all[grepl("^PV",PNT_all)])
       PNT_choices = c(PNT_choices, list(`Other`= c(PNT_all[!PNT_all%in%unlist(PNT_choices)])))
       selectInput("PNT", label = paste0("primary neurite tracts in dataset (",length(unlist(PNT_choices)),") :"), choices = PNT_choices,selected = NULL, multiple=TRUE, selectize=TRUE)
@@ -214,7 +222,11 @@ shinyServer(function(input, output, session) {
   # Dynamically update AG selection, depending on which PNTs are picked 
   output$AGselection <- renderUI({
     if(is_lhn_type(input$Type)){
-      AG_choices =  sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"anatomy.group"]))
+      Type = input$Type
+      if(Type=="LHN"){
+        Type=c("LN","ON")
+      }
+      AG_choices =  sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%Type)[,"anatomy.group"]))
       selectInput("AG", label = paste0("anatomy groups (",length(AG_choices),") :"), choices = c("all in selected primary neurite tracts",AG_choices),selected = "all in selected primary neurite tracts", multiple=TRUE, selectize=TRUE)
     }
   })
@@ -222,8 +234,12 @@ shinyServer(function(input, output, session) {
   # Dynamically update CT selection, depending on which PNTs and AGs are picked 
   output$CTselection <- renderUI({
     if(is_lhn_type(input$Type)){
+      Type = input$Type
+      if(Type=="LHN"){
+        Type=c("LN","ON")
+      }
       if("all in selected primary neurite tracts"%in%input$AG){
-        CT_choices = sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%input$Type)[,"cell.type"]))
+        CT_choices = sort(unique(subset(all.lh.neurons[,],pnt%in%input$PNT&skeleton.type%in%input$SkeletonType&type%in%Type)[,"cell.type"]))
       }else{
         CT_choices = sort(unique(subset(all.lh.neurons[,],anatomy.group%in%input$AG&skeleton.type%in%input$SkeletonType)[,"cell.type"]))
       }
@@ -343,12 +359,6 @@ shinyServer(function(input, output, session) {
                         ids = ids)
   })
 
-  
-  
-  # output$neurontoggle <- renderPlaywidget({
-  #   toggleWidget("plot3D", respondTo = "BrainMesh",
-  #                ids = vals$brainplot)
-  # })
   
   ########################
   # Neuron Selection Table #
@@ -574,10 +584,14 @@ shinyServer(function(input, output, session) {
   output$ChooseCTs <- renderUI({
     ct_choices = sort(unique(rownames(lhlite::lhn_odour_responses)))
     ct_choices = ct_choices[!ct_choices%in%c("notLHproper")] # Get rid of uncertain LHNs
-    if(length(input$SelectionTable_rows_selected)>1){
-      cts = sort(unique(vals$neurons[,"cell.type"][-input$SelectionTable_rows_selected]))
+    if(!is.null(vals$neurons)&length(vals$neurons)>0){  
+      if(length(input$SelectionTable_rows_selected)>1){
+        cts = sort(unique(vals$neurons[,"cell.type"][-input$SelectionTable_rows_selected]))
+      }else{
+        cts = sort(unique(vals$neurons[,"cell.type"]))
+      }  
     }else{
-      cts = sort(unique(vals$neurons[,"cell.type"]))
+      cts = NULL
     }
     cts_in_data = cts[cts%in%ct_choices]
     ct_choices = list(`LH neurons`= ct_choices[!grepl("PN",ct_choices)], `uniglomerular projection neurons` = ct_choices[grepl("PN",ct_choices)])
@@ -1038,7 +1052,7 @@ shinyServer(function(input, output, session) {
   output$NBLAST_ChooseID <- renderUI({
     if(input$QueryType=="Library"){
       possible = subset(vals$neurons,skeleton.type%in%input$NBLAST_SkeletonType&cell.type%in%input$NBLAST_ChooseFromLibrary)
-      skel_choices = subset(all.lh.neurons,cell.type%in%input$NBLAST_ChooseFromLibrary)[,"id"]
+      skel_choices = possible[,"id"]
       selectInput(inputId='NBLAST_ChooseID', label=paste0('individual neurons (',length(skel_choices),') :'), choices = skel_choices, selected = skel_choices[1], multiple=TRUE, selectize=TRUE)
     }
   })
@@ -1144,23 +1158,38 @@ shinyServer(function(input, output, session) {
   # Plot NBLAST results
   output$NBLAST_View3D <- renderRglwidget({
     rgl::clear3d()
-    rgl::plot3d(FCWBsmooth,alpha = 0.1)
+    rgl::rgl.viewpoint(userMatrix=vals$um,zoom=vals$zoom)
+    #vals$NBLAST$brainplot <- rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)[1]
+    rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)
+    nids <- c()
     query_neurons <- vals$NBLAST$tracings
     query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.5)
     if(!is.null(query_neurons)) {
-      plot3d(query_neurons, col=query_neurons[,"colour"], lwd=3, soma=TRUE)
+      nids <- unlist(rgl::plot3d(query_neurons, col=query_neurons[,"colour"], lwd=3, soma=TRUE,skipRedraw = TRUE))
       scores <- vals$NBLAST$result
       scores <- sort(scores, decreasing=TRUE)
       top.matches <- vals$NBLAST$matches
-      if(!is.null(input$NBLAST_SelectionTable_rows_selected)){ # Don't show neurons highlighted in selection table
-        top.matches = top.matches[-input$NBLAST_SelectionTable_rows_selected]
-      }
-      plot3d(top.matches,col = top.matches[,"colour"],lwd = 2, soma=TRUE)
+      # if(!is.null(input$NBLAST_SelectionTable_rows_selected)){ # Don't show neurons highlighted in selection table
+      #   top.matches = top.matches[-input$NBLAST_SelectionTable_rows_selected]
+      # }
+      mids <- unlist(rgl::plot3d(top.matches,col = top.matches[,"colour"],lwd = 2, soma=TRUE,skipRedraw = TRUE))
+      nids <- c(nids, mids)
     }
-    frontalView()
-    rglwidget()
+    vals$NBLAST$nids <- nids
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("NBLASTbraintoggle","NBLASTneurontoggle"))
   })
 
+  output$NBLASTbraintoggle <- renderPlaywidget({
+    rgl::toggleWidget("NBLAST_View3D", respondTo = "NBLASTBrainMesh",
+                      ids = vals$NBLAST$brainplot)
+  })
+  
+  output$NBLASTneurontoggle <- renderPlaywidget({
+    nams = names(vals$matches$neurons)[input$NBLAST_SelectionTable_rows_selected]
+    ids = unlist(sapply(nams,function(nam) vals$NBLAST$nids[grepl(nam,names(vals$NBLAST$nids))]))
+    rgl::toggleWidget("NBLAST_View3D", respondTo = "NBLASTHIDE",
+                      ids = ids)
+  })
   
   ##########################
   # NBLAST Selection Table #
