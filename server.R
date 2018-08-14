@@ -33,7 +33,7 @@ shinyServer(function(input, output, session) {
   vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
   vals$brainplot = NULL
-  vals$pnttext = NULL
+  vals$nids = NULL
   vals$pntids = NULL
   
   ############
@@ -308,7 +308,7 @@ shinyServer(function(input, output, session) {
     neurons = vals$neurons
     if(length(neurons)>0){
       #neurons = update_neurons(input=input,db=neurons)
-      rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE)
+      vals$nids <- unlist(rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE))
     }
     # Plot PNTs 
     pntids <- unlist(rgl::plot3d(lhlite::primary.neurite.tracts, soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE))
@@ -320,7 +320,7 @@ shinyServer(function(input, output, session) {
     names(pnttext) <- paste0(pnt_lhns,".text")
     vals$pntids <- c(pntids,pnttext)
     # Make widget
-    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle",paste0(pnt_lhns,"toggle")))
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","neurontoggle",paste0(pnt_lhns,"toggle")))
   })
   
   output$braintoggle <- renderPlaywidget({
@@ -331,11 +331,18 @@ shinyServer(function(input, output, session) {
   lapply(pnt_lhns,function(pnt){
     output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
       ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
-      #dput(ids)
       rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),
                         ids = ids)
     })
   })
+  
+  output$neurontoggle <- renderPlaywidget({
+      nams = names(vals$neurons)[input$SelectionTable_rows_selected]
+      ids = unlist(sapply(nams,function(nam) vals$nids[grepl(nam,names(vals$nids))]))
+      rgl::toggleWidget("plot3D", respondTo = "Hide",
+                        ids = ids)
+  })
+
   
   
   # output$neurontoggle <- renderPlaywidget({
@@ -352,7 +359,7 @@ shinyServer(function(input, output, session) {
     shiny::fluidPage(
       shinydashboard::box(
             width=12,
-            column(6,offset = 0,
+            column(10,offset = 0,
                    shiny::HTML('<div class="btn-group" role="group" aria-label="Basic example">'),
                    actionButton(inputId = "Del_row_head",label = "delete selected"),
                    actionButton(inputId = "Col_row_head",label = "recolour selected"),
@@ -361,8 +368,8 @@ shinyServer(function(input, output, session) {
             ),
             shiny::column(width = 12, 
                    DT::dataTableOutput("SelectionTable") 
-                   ),
-              tags$script(shiny::HTML('$(document).on("click", "input", function () {
+            ),
+            tags$script(shiny::HTML('$(document).on("click", "input", function () {
                                var checkboxes = document.getElementsByName("row_selected");
                                var checkboxesChecked = [];
                                for (var i=0; i<checkboxes.length; i++) {

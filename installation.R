@@ -4,7 +4,7 @@
 
 # From CRAN
 library(devtools)
-cran.packages = c("devtools","shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","heatmaply","data.table",
+cran.packages = c("shinyWidgets","devtools","shiny","shinyBS", "shinyURL","shinythemes","slickR","plotly","colourpicker","heatmaply","data.table",
                   "ggplot2","DT","shinydashboard")
 for(cp in cran.packages){
   if (!require(cp,character.only = TRUE)){

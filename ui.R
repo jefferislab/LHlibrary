@@ -157,10 +157,10 @@ tabPanel("data viewer",
                strong("see primary neurite tracts: "%>%label.help("lbl_pnts")),
                br(),
                lapply(1:length(pnt_lhns), function(i){
-                   div(style="display:inline-block",checkboxInput(inputId=paste0("PNT",pnt_lhns[i]), value=FALSE, label = pnt_lhns[i]))
+                   div(style="display:inline-block",shinyWidgets::awesomeCheckbox(inputId=paste0("PNT",pnt_lhns[i]), value=FALSE, label = pnt_lhns[i], status = "warning"))
                }),
                shiny::br(),
-               checkboxInput(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE),
+               shinyWidgets::awesomeCheckbox(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
                shiny::hr(),
                # Help text
                bsTooltip(id = "lbl_nt", title = "the broadest category for LH neurons", placement = "right", trigger = "hover"),
@@ -181,10 +181,21 @@ tabPanel("data viewer",
           tabsetPanel(type = "tabs",
                       tabPanel("3D",
                               rgl::playwidgetOutput("braintoggle"),
+                              rgl::playwidgetOutput("neurontoggle"),
                               lapply(pnt_lhns, function(pnt){
                                 rgl::playwidgetOutput(paste0(pnt,"toggle"))
                               }),
                               rgl::rglwidgetOutput("plot3D", width="1200px", height="700px"),
+                              shinyWidgets::switchInput(
+                                inputId = "Hide",
+                                label = "highlighted",
+                                offLabel = "hide",
+                                onLabel = "show",
+                                labelWidth = "200px",
+                                value = FALSE,
+                                onStatus = "warning", 
+                                offStatus = "cyborg"
+                              ),
                               uiOutput("MainTable")
                       ),
                       tabPanel("odour responses",
