@@ -63,7 +63,6 @@ split_brain_images_low = split_brain_images_low[!grepl("ntitled",split_brain_ima
 split_vnc_images_low = paste0("maxprojections_lowres/VNC/",list.files("www/maxprojections_lowres/VNC/"))
 split_vnc_images_low = split_vnc_images_low[!grepl("ntitled|creenshot",split_vnc_images_low)]
 
-
 # linecodes
 lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
 lines = intersect(lhlite::lh_line_info$linecode,lines) # Some lines are lost...

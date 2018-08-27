@@ -27,6 +27,7 @@ shinyServer(function(input, output, session) {
   vals$um = structure(c(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1), .Dim = c(4L, 4L)) # Frame of view
   vals$neurons <- subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")
   vals$neuronsDF <- data.table::data.table(subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
+  vals$graphics1 = 0
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
   vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL, nids = NULL, brainplot = NULL)
   vals$split_brain_images_chosen = split_brain_images
@@ -314,6 +315,15 @@ shinyServer(function(input, output, session) {
     # if(!input$BrainMesh){
     #    rgl::pop3d()
     # }
+    # Plot PNTs 
+    pntids <- unlist(rgl::plot3d(lhlite::primary.neurite.tracts, soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE))
+    pxyz = t(sapply(lhlite::primary.neurite.tracts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
+    rownames(pxyz) = gsub(pattern = "LH|lh", "", names(lhlite::primary.neurite.tracts))
+    pnttext <- sapply(pnt_lhns, function(pnt){
+      rgl::text3d(pxyz[pnt,]+c(-3, 3, 0), texts = pnt)[1]
+    })
+    names(pnttext) <- paste0(pnt_lhns,".text")
+    vals$pntids <- c(pntids,pnttext)
     if(length(input$neuropils)>0){
       if("all neuropils"%in%input$neuropils) {
         rgl::plot3d(subset(newFCWBNP.surf, NULL), alpha = 0.2,skipRedraw = TRUE)
@@ -326,16 +336,8 @@ shinyServer(function(input, output, session) {
     if(length(neurons)>0){
       vals$nids <- unlist(rgl::plot3d(neurons,soma=T,lwd=3, col = neurons[,"colour"],skipRedraw = TRUE, WithConnectors = TRUE))
     }
-    # Plot PNTs 
-    pntids <- unlist(rgl::plot3d(lhlite::primary.neurite.tracts, soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE))
-    pxyz = t(sapply(lhlite::primary.neurite.tracts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
-    rownames(pxyz) = gsub(pattern = "LH|lh", "", names(lhlite::primary.neurite.tracts))
-    pnttext <- sapply(pnt_lhns, function(pnt){
-      rgl::text3d(pxyz[pnt,]+c(-3, 3, 0), texts = pnt)[1]
-    })
-    names(pnttext) <- paste0(pnt_lhns,".text")
-    vals$pntids <- c(pntids,pnttext)
     # Make widget
+    #vals$graphics1 = vals$graphics1 + 1
     rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","neurontoggle",paste0(pnt_lhns,"toggle")))
   })
   
@@ -343,20 +345,38 @@ shinyServer(function(input, output, session) {
     rgl::toggleWidget("plot3D", respondTo = "BrainMesh",
                  ids = vals$brainplot)
   })
-    
+  
+  # # Announce when the 3D rendering is complete
+  # output$plot3d_complete <- reactive({
+  #   return(ifelse(is.null(vals$pntids), FALSE, TRUE))
+  # })
+  # outputOptions(output, 'plot3d_complete', suspendWhenHidden=FALSE)
+  # 
+  
+  # observeEvent(vals$graphics1,{
+  #   lapply(pnt_lhns,function(pnt){
+  #     output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
+  #       ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
+  #       button = paste0("PNT",pnt)
+  #       rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),
+  #                         ids = ids)
+  #     })
+  #     dput(vals$graphics1)
+  #   })
+  # })
+  
   lapply(pnt_lhns,function(pnt){
     output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
       ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
-      rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),
-                        ids = ids)
+      button = paste0("PNT",pnt)
+      rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),ids = ids)
     })
   })
-  
+
   output$neurontoggle <- renderPlaywidget({
       nams = names(vals$neurons)[input$SelectionTable_rows_selected]
       ids = unlist(sapply(nams,function(nam) vals$nids[grepl(nam,names(vals$nids))]))
-      rgl::toggleWidget("plot3D", respondTo = "Hide",
-                        ids = ids)
+      rgl::toggleWidget("plot3D", respondTo = "Hide",ids = ids)
   })
 
   
@@ -1022,6 +1042,18 @@ shinyServer(function(input, output, session) {
   # NBLAST #
   ##########
   
+  # Select neuron to NBLAST
+  output$NBLASTselection = renderUI({
+    if(length(vals$neurons>0)){
+      fluidPage(
+        uiOutput("ChooseUploadedSkeletons"),
+        uiOutput("NBLAST_SkeletonType"),
+        uiOutput("NBLAST_ChooseFromLibrary"),
+        uiOutput("NBLAST_ChooseID")
+      )
+    }
+  })
+  
   # Dynamically update Uploaded Neurons selection
   output$ChooseUploadedSkeletons <- renderUI({
     if(input$QueryType=="UserUpload"){
@@ -1347,7 +1379,7 @@ shinyServer(function(input, output, session) {
     selectInput("LineCodeCTs", label = paste0("cell types in Dolan et al. 2018 split lines (",length(unlist(cts_choices)),") :"), choices = cts_choices, selected = chosen_in_lines[1], multiple=FALSE, selectize=TRUE, width = 500)
   })
   
-  # Reset line selelction
+  # Reset line selection
   observeEvent(input$LineCodeCTs, {
     vals$nextline = 1
   })
