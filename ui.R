@@ -79,29 +79,35 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                                                 ),
                                          tabPanel("projection neurons",
                                                   shiny::br(),
-                                                  shiny::HTML("Images with an orange background depict all projection neurons of a modality, in grey all neurons of a tract, and in white individual anatomy groups"),
+                                                  shiny::HTML("Images with an orange background depict all projection neurons of a modality, in grey all neurons of a tract, and in white individual anatomy groups. If images do not appear, click on the lateral horn tab and back again (an issue with some browsers)."),
                                                   shiny::br(),
-                                                  fluidRow(
-                                                    lapply(1:length(PN_images), function(i) {
-                                                      column(3,tags$button(
-                                                        id = PN_images[i],
-                                                        class = "btn action-button",
-                                                        tags$img(src = PN_images[i],height = "100%",width="600px")
-                                                      ))
-                                                    })
-                                                  )
-                                                )
+                                                  shiny::br(),
+                                                  shiny::fluidRow(
+                                                    column(3,
+                                                           shinyWidgets::awesomeRadio("PNmodality", label = "presumptive modality/role",choices = list("all" = "all", "Olfactory" = "Olfactory_", "Gustatory" = "Gustatory_", "Mechanosensory" = "Mechanosensation", "Neuromodulatory" = "Neuromodulatory","Thermo/hygrosensory" = "Thermosensory", "Olfactory+Gustatory" = "Olfactory+Gustatory", "Unknown" = "Unknown"), selected = "Olfactory_", status = "warning")
+                                                    ),
+                                                    column(3,
+                                                           shinyWidgets::awesomeRadio("PNneuropil", label = "dendritic neuropil",choices = list("all" = "all", "Antennal lobe" = "AL", "Wedge" = "WED","Mushroom body" = "MB", "Gnathal ganglion", "Anterior ventro-lateral protocerebrum" = "AVLP", "Central protocerebral neuropils" = "Centrifugal|MB", "Unknown" = "Unknown"), selected = "all", status = "warning")
+                                                    ),
+                                                    column(3,
+                                                           shinyWidgets::awesomeRadio("PNtract", label = "axon tract",choices = list("all" = "all", "Medial antennal lobe tract (mALT)" = "mALT", "Medio-laterla antennal lobe tract (mlALT)" = "mlALT","Lateral antennal lobe tract (lALT)" = "lALT", "Transverse antennal lobe tract (tALT)" = "tALT", "Transverse antennal lobe tract 3 (t3ALT)" = "t3ALT", "Tract from WEDGE (WEDT)" = "WEDT", "From mushroom body" = "From_MB", "From lateral protocerebrum (LPT)" = "LPT", "Brain midline tract (central)" = "Central", "From central brain" = "Centrifugal", "Uncertain" = "Uncertain"), selected = "all", status = "warning")
+                                                    )
+                                                  ),
+                                                  shiny::br(),
+                                                  shiny::uiOutput("PNGrid")
+                                         )
                              )
             ),
             conditionalPanel(condition="input.AtlasContent =='split-GAL4 lines'",
                             shiny::fluidRow(
                                column(3,
-                                 shiny::radioButtons("splittype", label = "type",choices = list("all" = "all", "LH output neurons" = "ON", "LH local neurons" = "LN", "LH input neurons" = "IN"), selected = "all")
+                                  shinyWidgets::awesomeRadio("splittype", label = "type",choices = list("all" = "all", "LH output neurons" = "ON", "LH local neurons" = "LN", "LH input neurons" = "IN"), selected = "all", status = "warning")
                                 ),
                                column(3,
-                                 shiny::radioButtons("splitNT", label = "transmitter",choices = list("all" = "all", "Acetylcholine" = "ChA", "GABA" = "GABA", "Glutamate" = "Vglut", "Unknown" = "Unknown"), selected = "all")
+                                  shinyWidgets::awesomeRadio("splitNT", label = "transmitter",choices = list("all" = "all", "Acetylcholine" = "ChA", "GABA" = "GABA", "Glutamate" = "Vglut", "Unknown" = "Unknown"), selected = "all", status = "warning")
                                )
                              ),
+                            shiny::br(),
                             shiny::uiOutput("imageGrid")
             ),
             shiny::hr()
@@ -153,15 +159,17 @@ tabPanel("data viewer",
                hr(),
                # Choose to show brain sub-volumes
                selectInput(inputId='neuropils', label= 'see neuropils:'%>%label.help("lbl_ns"), choices = c("all neuropils",sort(FCWBNP.surf$RegionList)), selected = "LH_R", multiple=TRUE, selectize=TRUE),
-               # Choose which primary neurite tractsw to plot
+               shiny::br(),
+               shinyWidgets::awesomeCheckbox(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
+               shiny::br(),
+               # Choose which primary neurite tracts to plot
                strong("see primary neurite tracts: "%>%label.help("lbl_pnts")),
                br(),
                lapply(1:length(pnt_lhns), function(i){
                    div(style="display:inline-block",shinyWidgets::awesomeCheckbox(inputId=paste0("PNT",pnt_lhns[i]), value=FALSE, label = pnt_lhns[i], status = "warning"))
-               }),
+               }), # Individual PNT toggle on and off not working well. Discontinued.
                shiny::br(),
-               shinyWidgets::awesomeCheckbox(inputId="BrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
-               #shinyWidgets::awesomeCheckbox(inputId="SeePNTs", label = "see primary neurite tracts"%>%label.help("lbl_pnts"),value=FALSE,status="warning"),
+               shinyWidgets::awesomeCheckbox(inputId="SeePNTs", label = "see primary neurite tracts"%>%label.help("lbl_pnts"),value=FALSE,status="warning"),
                shiny::hr(),
                # Help text
                bsTooltip(id = "lbl_nt", title = "the broadest category for LH neurons", placement = "right", trigger = "hover"),
@@ -176,16 +184,16 @@ tabPanel("data viewer",
         # Show a plot of the brain
         mainPanel(
           includeCSS("loader.css"), # Load spinny waiting wheel
-          shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 420px; z-index: -10000;'>Loading...</div>"),
-          shiny::HTML("<div style='position: absolute; left: 220px; top: 350px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
+          shiny::HTML("<div class='loader' style='position: absolute; left: 450px; top: 420px; z-index: -10000;'>Loading...</div>"),
+          shiny::HTML("<div style='position: absolute; left: 220px; top: 400px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
           # Output: Tabset
           tabsetPanel(type = "tabs",
                       tabPanel("3D",
                               rgl::playwidgetOutput("braintoggle"),
                               rgl::playwidgetOutput("neurontoggle"),
-                              lapply(pnt_lhns, function(pnt){
-                                rgl::playwidgetOutput(paste0(pnt,"toggle"))
-                              }),
+                              # lapply(pnt_lhns, function(pnt){
+                              #   rgl::playwidgetOutput(paste0(pnt,"toggle"))
+                              # }), # Individual PNT toggle on and off not working well. Discontinued.
                               rgl::rglwidgetOutput("plot3D", width="1200px", height="700px"),
                               shinyWidgets::switchInput(
                                 inputId = "Hide",
@@ -206,6 +214,7 @@ tabPanel("data viewer",
                                  hr(),
                                  plotly::plotlyOutput("Ephys"),
                                  shiny::br(),
+                                 shiny::hr(),
                                  shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
                                              See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>"),
                                shiny::hr()
@@ -220,6 +229,7 @@ tabPanel("data viewer",
                                hr(),
                                plotly::plotlyOutput("OdoursResponses"),
                                shiny::br(),
+                               shiny::hr(),
                                shiny::HTML("<i>smoothed number of spikes in the 500 ms window after odour stimulation period shown. 
                                              See <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> for details.</i>"),
                                shiny::hr()
@@ -243,6 +253,7 @@ tabPanel("data viewer",
                           shiny::br(),
                           shiny::tableOutput('PNINFO'),
                           tags$head(tags$style("#PNINFO table {background-color: white; }", media="screen", type="text/css")),
+                          shiny::hr(),
                           shiny::HTML("<i>Information in table primarily collated by Paavo Huoviala and Marta Costa</i>"),
                           shiny::br(),
                           shiny::hr()
@@ -251,6 +262,7 @@ tabPanel("data viewer",
                                shiny::br(),
                                plotly::plotlyOutput("PNCalicumResponses", width = "100%", height = "1000px"),
                                shiny::br(),
+                               shiny::hr(),
                                shiny::HTML("<i>Data from a Ca2+ imaging study of PN dendrites in the line <b><strong>NP225-Gal4</strong></b> <a href='https://www.ncbi.nlm.nih.gov/pubmed/27321924' target='_blank'>(Badel et al. 2017)</a>.</i>"),
                                shiny::br(),
                                shiny::hr()
@@ -258,6 +270,7 @@ tabPanel("data viewer",
                       tabPanel("predicted connectivity",
                                plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
                                shiny::br(),
+                               shiny::hr(),
                                shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
                                            normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>"),
                                shiny::br(),
@@ -267,6 +280,7 @@ tabPanel("data viewer",
                                shiny::br(),
                                plotly::plotlyOutput("Jeanne", width = "100%", height = "1000px"),
                                shiny::br(),
+                               shiny::hr(),
                                shiny::HTML("<i>Data from a study in which lateral horn neurons voltage responses to GH146 glomerular photostimulation were measured (see <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018</a>). The rows of this matrix are clustered by the morphological similarity of their dyefills, as assessed by <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4961245/' target='_blank'>NBLAST</a>, and the columns by the values in this matrix.</i>"),
                                shiny::br(),
                                shiny::hr()
@@ -295,15 +309,14 @@ tabPanel("data viewer",
               shiny::HTML("<b><span style='color: #F21A00;'>To NBLAST neurons they must be in the neuron selection table, in the data viewer tab</span></b>"),
               shiny::br(),
               shiny::br(),
-              selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
-              uiOutput("NBLASTselection"),
+              uiOutput("NBLASTselection"), # Problematic?
               shiny::HTML("<i>If multiple neurons are chosen, NBLAST scores will be averaged across these neurons. I.e. they will be treated as one amalgamated neuron</i><br /><br />"),
               shinyWidgets::sliderTextInput(inputId = "NumHits",label = "no. hits to visualise:", choices = c(1:100), grid = TRUE, selected = 10),
               shinyWidgets::awesomeCheckbox(inputId="UseMean", label="Use mean scores", value= TRUE,status="warning"),
               shiny::HTML("<i>Using the mean score is useful for finding exact matches, i.e. one in which the target is a good hit for the query and the query is a good hit for the target too.
                    This is particularly useful for clustering neurons into types, rather than,
                    for example, just finding neurons that go through the same tract but branch off differently.</i><br /><br />"),
-              #shinyWidgets::awesomeCheckbox(inputId="NBLASTBrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
+              shinyWidgets::awesomeCheckbox(inputId="NBLASTBrainMesh", label = "see brain mesh"%>%label.help("lbl_bm"),value=TRUE,status="warning"),
               actionButton("NBLASTGO","NBLAST")
               ),
           mainPanel(
@@ -311,8 +324,8 @@ tabPanel("data viewer",
             includeCSS("loader.css"),
             shiny::HTML("<div class='loader' style='position: absolute; left: 400px; top: 300px; z-index: -10000;'>Loading...</div>"),
             shiny::HTML("<div style='position: absolute; left: 220px; top: 270px; z-index: -10000; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
-            #rgl::playwidgetOutput("NBLASTbraintoggle"),
-            #rgl::playwidgetOutput("NBLASTneurontoggle"),
+            rgl::playwidgetOutput("NBLASTbraintoggle"),
+            rgl::playwidgetOutput("NBLASTneurontoggle"),
             rgl::rglwidgetOutput("NBLAST_View3D", width="1200px", height="700px"),
             conditionalPanel(condition = "output.tracing_nblast_complete",
                              h3("Score distribution"),

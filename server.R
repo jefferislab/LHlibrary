@@ -29,13 +29,15 @@ shinyServer(function(input, output, session) {
   vals$neuronsDF <- data.table::data.table(subset(all.lh.neurons,cell.type=="PD2a1"&skeleton.type=="FlyCircuit")[,selected_columns])
   vals$graphics1 = 0
   vals$CATMAID = list(CATMAID_server = "https://neuropil.janelia.org/tracing/fafb/v14/", CATMAID_authname= NULL,CATMAID_authpassword = NULL, CATMAID_token = NULL)
-  vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL, nids = NULL, brainplot = NULL)
+  vals$NBLAST = list(tracings = NULL, result = NULL, matches = NULL)
   vals$split_brain_images_chosen = split_brain_images
   vals$split_brain_images_low = split_brain_images_low
   vals$message = NULL
   vals$brainplot = NULL
   vals$nids = NULL
-  vals$pntids = NULL
+  vals$NBLASTnids = NULL
+  vals$NBLASTbrainplot = NULL
+  vals$PN_images_chosen = NULL
   vals$nextline = 1
   
   ############
@@ -129,6 +131,45 @@ shinyServer(function(input, output, session) {
            ))
          })
     )
+  })
+  
+  # Select PNs
+  observeEvent({input$PNmodality
+    input$PNtract
+    input$PNneuropil},{
+      if(input$PNmodality=="all"){
+        PN_images_chosen = PNAG_images
+      }else{
+        PN_images_chosen = PN_images[grepl(input$PNmodality,PN_images)]
+      }
+      if(input$PNneuropil=="all"){
+        PN_images_chosen = PN_images_chosen
+      }else{
+        PN_images_chosen = PN_images_chosen[grepl(input$PNneuropil,PN_images_chosen)]
+      }
+      if(input$PNtract=="all"){
+        PN_images_chosen = PN_images_chosen
+      }else{
+        PN_images_chosen = PN_images_chosen[grepl(input$PNtract,PN_iPN_images_chosen)]
+      }
+      vals$PN_images_chosen = PN_images_chosen
+    })
+  
+  # PN image grid
+  output$PNGrid <- renderUI({
+    PN_images_chosen = vals$PN_images_chosen
+    dput(PN_images_chosen)
+    if(!is.null(PN_images_chosen)){
+      shiny::fluidRow(
+        lapply(1:length(PN_images_chosen), function(i) {
+          column(3,tags$button(
+            id = PN_images_chosen[i],
+            class = "btn action-button",
+            tags$img(src = PN_images_chosen[i],height = "100%",width="600px")
+          ))
+        })
+      ) 
+    }
   })
   
   # Don't cache the high res brain images in the browser
@@ -315,15 +356,24 @@ shinyServer(function(input, output, session) {
     # if(!input$BrainMesh){
     #    rgl::pop3d()
     # }
-    # Plot PNTs 
-    pntids <- unlist(rgl::plot3d(lhlite::primary.neurite.tracts, soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE))
-    pxyz = t(sapply(lhlite::primary.neurite.tracts, function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
-    rownames(pxyz) = gsub(pattern = "LH|lh", "", names(lhlite::primary.neurite.tracts))
-    pnttext <- sapply(pnt_lhns, function(pnt){
-      rgl::text3d(pxyz[pnt,]+c(-3, 3, 0), texts = pnt)[1]
-    })
-    names(pnttext) <- paste0(pnt_lhns,".text")
-    vals$pntids <- c(pntids,pnttext)
+    # Plot PNTs
+    pntstoplot <- NULL
+    if(input$SeePNTs){
+      pntstoplot <- names(lhlite::primary.neurite.tracts)
+    }else{      
+      pntstoplot <- unlist(sapply(paste0("PNT",pnt_lhns), function(i) input[[i]]))
+      pntstoplot <- pntstoplot[pntstoplot==TRUE]
+      pntstoplot <- gsub("^PNT","",names(pntstoplot))
+    }
+    if(!is.null(pntstoplot)&length(pntstoplot)>0){
+      rgl::plot3d(lhlite::primary.neurite.tracts[pntstoplot], soma = T, lwd = 5, col = "grey50",skipRedraw = TRUE)
+      pxyz = t(sapply(lhlite::primary.neurite.tracts[pntstoplot], function(x) nat::xyzmatrix(x)[nat::rootpoints(x),]))
+      rownames(pxyz) = gsub(pattern = "LH|lh", "", names(lhlite::primary.neurite.tracts[pntstoplot]))
+      pnttext <- sapply(pntstoplot, function(pnt){
+        rgl::text3d(pxyz[pnt,]+c(-3, 3, 0), texts = pnt)[1]
+      })
+    }
+    # Plot neuropils 
     if(length(input$neuropils)>0){
       if("all neuropils"%in%input$neuropils) {
         rgl::plot3d(subset(newFCWBNP.surf, NULL), alpha = 0.2,skipRedraw = TRUE)
@@ -338,7 +388,7 @@ shinyServer(function(input, output, session) {
     }
     # Make widget
     #vals$graphics1 = vals$graphics1 + 1
-    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","neurontoggle",paste0(pnt_lhns,"toggle")))
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("braintoggle","neurontoggle")) # paste0(pnt_lhns,"toggle")
   })
   
   output$braintoggle <- renderPlaywidget({
@@ -346,32 +396,13 @@ shinyServer(function(input, output, session) {
                  ids = vals$brainplot)
   })
   
-  # # Announce when the 3D rendering is complete
-  # output$plot3d_complete <- reactive({
-  #   return(ifelse(is.null(vals$pntids), FALSE, TRUE))
-  # })
-  # outputOptions(output, 'plot3d_complete', suspendWhenHidden=FALSE)
-  # 
-  
-  # observeEvent(vals$graphics1,{
-  #   lapply(pnt_lhns,function(pnt){
-  #     output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
-  #       ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
-  #       button = paste0("PNT",pnt)
-  #       rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),
-  #                         ids = ids)
-  #     })
-  #     dput(vals$graphics1)
+  # lapply(pnt_lhns,function(pnt){
+  #   output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
+  #     ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
+  #     button = paste0("PNT",pnt)
+  #     rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),ids = ids)
   #   })
-  # })
-  
-  lapply(pnt_lhns,function(pnt){
-    output[[paste0(pnt,"toggle")]] <- renderPlaywidget({
-      ids = vals$pntids[grepl(paste0(pnt,"\\."), names(vals$pntids))]
-      button = paste0("PNT",pnt)
-      rgl::toggleWidget("plot3D", respondTo = paste0("PNT",pnt),ids = ids)
-    })
-  })
+  # }) # Individual PNT toggle on and off not working well
 
   output$neurontoggle <- renderPlaywidget({
       nams = names(vals$neurons)[input$SelectionTable_rows_selected]
@@ -973,7 +1004,7 @@ shinyServer(function(input, output, session) {
           tdf = as.data.frame(matrix("unknown",nrow = length(tracing_neurons),ncol = length(selected_columns), dimnames = list(names(tracing_neurons),selected_columns)))
           tdf[,"id"] = tracing_neurons[,"name"]
           tdf[,"skeleton.type"] = input$TracingType
-          tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
+          tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.25) # A range of shades of grey
           attr(tracing_neurons,"df") = tdf # Attach meta data 
           names(tracing_neurons) = tdf[,"id"] # Make sure names are same as ID
         }
@@ -1012,7 +1043,7 @@ shinyServer(function(input, output, session) {
         }
         names(tracing_neurons) = tdf[,"id"]
         tdf[,"skeleton.type"] = input$TracingType
-        tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.5) # A range of shades of grey
+        tdf[,"colour"] = grDevices::grey.colors(n=length(tracing_neurons),start=0,end=0.25) # A range of shades of grey
         attr(tracing_neurons,"df") = tdf # Attach meta data
         # Comoute transforms
         if(input$TracingBrain!="FCWB"){ # Transform the brain if it needs to be transformed
@@ -1044,8 +1075,9 @@ shinyServer(function(input, output, session) {
   
   # Select neuron to NBLAST
   output$NBLASTselection = renderUI({
-    if(length(vals$neurons>0)){
+    if(length(vals$neurons)>0){
       fluidPage(
+        selectInput(inputId='QueryType', label='query type:'%>%label.help("lbl_qt"), choices = list(`LH library neuron(s)` = "Library",`uploaded neuron(s)` = "UserUpload"), selected = list(`LH library neuron(s)` = "Library"), multiple=FALSE, selectize=TRUE),
         uiOutput("ChooseUploadedSkeletons"),
         uiOutput("NBLAST_SkeletonType"),
         uiOutput("NBLAST_ChooseFromLibrary"),
@@ -1136,15 +1168,14 @@ shinyServer(function(input, output, session) {
       vals$NBLAST$tracings = vals$neurons[input$NBLAST_ChooseID]
       if(length(input$NBLAST_ChooseID)>1){
         scores = colSums(lhlite::lh_nblast[input$NBLAST_ChooseID,])
-        scores.reverse = colSums(lhlite::lh_nblast[input$NBLAST_ChooseID,])
+        scores.reverse = rowSums(lhlite::lh_nblast[,input$NBLAST_ChooseID])
       }else{
         scores = lhlite::lh_nblast[input$NBLAST_ChooseID,]
-        scores.reverse = lhlite::lh_nblast[input$NBLAST_ChooseID,]
+        scores.reverse = lhlite::lh_nblast[,input$NBLAST_ChooseID]
       }
       if(input$UseMean){
         scores = (scores + scores.reverse) / 2
       }
-      names(scores) = colnames(lh_nblast)
       scores = scores[!names(scores)%in%input$NBLAST_ChooseID] # Remove self-match
     }
     scores <- sort(scores, decreasing=TRUE)
@@ -1191,11 +1222,11 @@ shinyServer(function(input, output, session) {
   output$NBLAST_View3D <- renderRglwidget({
     rgl::clear3d()
     rgl::rgl.viewpoint(userMatrix=vals$um,zoom=vals$zoom)
-    #vals$NBLAST$brainplot <- rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)[1]
-    rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)
-    nids <- c()
+    vals$NBLASTbrainplot <- rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)[1]
+    nids = c()
+    # rgl::plot3d(FCWBsmooth,alpha = 0.1,skipRedraw = TRUE)
     query_neurons <- vals$NBLAST$tracings
-    query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.5)
+    query_neurons[,"colour"] <- grDevices::grey.colors(n=length(query_neurons),start=0,end=0.25)
     if(!is.null(query_neurons)) {
       nids <- unlist(rgl::plot3d(query_neurons, col=query_neurons[,"colour"], lwd=3, soma=TRUE,skipRedraw = TRUE))
       scores <- vals$NBLAST$result
@@ -1207,18 +1238,18 @@ shinyServer(function(input, output, session) {
       mids <- unlist(rgl::plot3d(top.matches,col = top.matches[,"colour"],lwd = 2, soma=TRUE,skipRedraw = TRUE))
       nids <- c(nids, mids)
     }
-    vals$NBLAST$nids <- nids
-    rgl::rglwidget(x = rgl::scene3d(),controllers = c("NBLASTbraintoggle","NBLASTneurontoggle"))
+    vals$NBLASTnids <- nids
+    rgl::rglwidget(x = rgl::scene3d(),controllers = c("NBLASTneurontoggle"))
   })
 
   output$NBLASTbraintoggle <- renderPlaywidget({
     rgl::toggleWidget("NBLAST_View3D", respondTo = "NBLASTBrainMesh",
-                      ids = vals$NBLAST$brainplot)
+                      ids = vals$NBLASTbrainplot)
   })
   
   output$NBLASTneurontoggle <- renderPlaywidget({
-    nams = names(vals$matches$neurons)[input$NBLAST_SelectionTable_rows_selected]
-    ids = unlist(sapply(nams,function(nam) vals$NBLAST$nids[grepl(nam,names(vals$NBLAST$nids))]))
+    nams = names(vals$NBLAST$matches)[input$NBLAST_SelectionTable_rows_selected]
+    ids = unlist(sapply(nams,function(nam) vals$NBLASTnids[grepl(nam,names(vals$NBLASTnids))]))
     rgl::toggleWidget("NBLAST_View3D", respondTo = "NBLASTHIDE",
                       ids = ids)
   })

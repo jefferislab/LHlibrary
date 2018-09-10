@@ -66,22 +66,3 @@ split_vnc_images_low = split_vnc_images_low[!grepl("ntitled|creenshot",split_vnc
 # linecodes
 lines = sapply(split_brain_images, function(x )gsub(".jpg","",tail(unlist(strsplit(x,'/')),n=1)))
 lines = intersect(lhlite::lh_line_info$linecode,lines) # Some lines are lost...
-
-
-############
-# Old Code #
-############
-
-#
-# options(vfbr.server = 'http://www.virtualflybrain.org')
-#
-# # Load VFB ID lookup table
-# vfb_ids=readRDS('data/vfb_ids.rds')
-# 
-# # Load VFB annotation ID lookup table
-# vfb_annotations <- read.table("data/annotation_map.tsv", header=TRUE, sep="\t", quote = "")
-# 
-# # Get the GMR line URLs
-# gmr_stack_urls=readRDS('data/gmr_stack_urls.rds')
-
-
