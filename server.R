@@ -158,7 +158,6 @@ shinyServer(function(input, output, session) {
   # PN image grid
   output$PNGrid <- renderUI({
     PN_images_chosen = vals$PN_images_chosen
-    dput(PN_images_chosen)
     if(!is.null(PN_images_chosen)){
       shiny::fluidRow(
         lapply(1:length(PN_images_chosen), function(i) {

@@ -349,9 +349,9 @@ tabPanel("data viewer",
        )
      ),
 
-###################
+####################
 # LH Naming System #
-###################
+####################
 
 tabPanel("naming system",
         shiny::fluidPage(
