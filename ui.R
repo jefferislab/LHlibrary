@@ -24,7 +24,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
                         Here in our atlas you can browse through all the known cell types that constitute the Drosophilid lateral horn, in 2D here or 3D in the <b><strong>data viewer</strong></b>, as introduced by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>.
                         Neurons of the lateral horn are named by a hierarchical classification system. They are each classified into a <b><strong>primary neurite cluster</strong></b>, <b><strong>anatomy group</strong></b>
                         and finally <b><strong>cell type</strong></b>. See the <b><strong>naming system</strong></b> tab for details. The <b><strong>data viewer</strong></b> tab lets you display these morphologies in 3D, access data on neurons' odour responses and
-                        search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>."),
+                        search for specific split-GAL4 lines from <a href='https://www.biorxiv.org/content/early/2018/09/12/404277' target='_blank'>Dolan et al. 2018</a>."),
             shiny::br(),
             shiny::br(),
             shiny::HTML("The data presented on this site originate primarily from five different sources cited in our <strog>about</strong></b> section.
@@ -32,7 +32,7 @@ shinyUI(navbarPage("LH library", id="tab", fluid = TRUE,
             shiny::br(),
             shiny::br(),
             shiny::HTML("Below, you can click on the primary neurite clusters below to see their constituent anatomy groups and cell types. You can also choose to view the split-GAL4 line collection for
-                        sparse lateral horn driver lines collected by <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>."),
+                        sparse lateral horn driver lines collected by <a href='https://www.biorxiv.org/content/early/2018/09/12/404277' target='_blank'>Dolan et al. 2018</a>."),
             shiny::br(),
             shiny::hr(),
             shiny::selectInput(inputId='AtlasContent', label='dataset:', choices = c("neuron skeletons","split-GAL4 lines"), selected = "neuron skeletons", multiple=FALSE, selectize=FALSE),
@@ -495,7 +495,7 @@ tabPanel("the lateral horn",
                     shiny::HTML("Part of the reason why the LH is relatively ill-understood as compared with the
                                 mushroom body is that its anatomical structure is less clear, and has proven less
                                 targetable by genetic techniques than the more distinctive mushroom bodies. 
-                                To this end, we have produced a set of genetic reagents to target the lateral horn  <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Dolan et al. 2018)</a>.
+                                To this end, we have produced a set of genetic reagents to target the lateral horn  <a href='https://www.biorxiv.org/content/early/2018/09/12/404277' target='_blank'>(Dolan et al. 2018)</a>.
                                 However, in order to resolve outstanding questions about its function, its structure in terms of
                                 circuit logic needs to be fully understood, and this will require high-resolution, synaptic level reconstruction of LH circuitry.
                                 The large number of KCs enables sparse odor coding, which is proposed to avoid synaptic interference during memory formation.
@@ -538,7 +538,7 @@ tabPanel("the lateral horn",
           h3("Purpose"),
           shiny::HTML("Olfactory information in <i>Drosophila melanogaster</i> may be processed by as few as three synapses before engaging motor programmes. Previous research has largely focused on the more superficial components of this shallow system.
                 In the the <a href='http://flybrain.mrc-lmb.cam.ac.uk/jefferislabwebsite/' target='_blank'> Jefferis group</a> at the <a href='https://www2.mrc-lmb.cam.ac.uk/' target='_blank'>MRC LMB</a> in Cambridge, UK, we aim to describe the internal circuitry of the lateral horn (LH), the insect analogue of the mammalian cortical amygdala.
-                This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Dolan et al. 2018</a>,
+                This web app accompanies two publications, <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a> and <a href='https://www.biorxiv.org/content/early/2018/09/12/404277' target='_blank'>Dolan et al. 2018</a>,
                 and aims to bring together datasets that enrich our knowledge of cell types of the lateral horn."
                       ),
           shiny::br(),
