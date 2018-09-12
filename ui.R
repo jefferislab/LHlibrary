@@ -136,19 +136,19 @@ tabPanel("data viewer",
                                 hr()
                ),
                conditionalPanel(condition="input.Type =='LN'||input.Type =='ON'|input.Type =='LHN'",
-                  h5("search mushroom body output neuronssearch groups of lateral horn neurons"),
+                  h5("OR search groups of lateral horn neurons"),
                   uiOutput("PNTselection"),
                   uiOutput("AGselection"),
                   uiOutput("CTselection"),
                   hr()
                ),
                conditionalPanel(condition="input.Type =='MBON'",
-                                h5("search mushroom body output neurons"),
+                                h5("OR search mushroom body output neurons"),
                                 uiOutput("MBONselection"),
                                 hr()
                ),
                conditionalPanel(condition="input.Type =='IN'",
-                                h5("Or search projection neurons"),
+                                h5("OR search projection neurons"),
                                 uiOutput("PNtype"),
                                 uiOutput("PNselection"),
                                 hr()
