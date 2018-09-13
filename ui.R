@@ -271,8 +271,8 @@ tabPanel("data viewer",
                                plotly::plotlyOutput("Overlap", width = "100%", height = "1000px"),
                                shiny::br(),
                                shiny::hr(),
-                               shiny::HTML("<i>Predicted connecvtivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
-                                           normalised so that 1 prepresents a likely strong connection and 0 represents no chance for connectivity.</i>"),
+                               shiny::HTML("<i>Predicted connectivity is based on an overlap score between PN axons and LH dendrite (see Methods in <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>Frechter et al. 2018</a>). This matrix has been averaged across cell types and
+                                           normalised so that 1 represents a likely strong connection and 0 represents no chance for connectivity.</i>"),
                                shiny::br(),
                                shiny::hr()
                       ),
@@ -486,7 +486,7 @@ tabPanel("the lateral horn",
                                 In stark contrast, it seems that LH neurons exhibit stereotyped functional connectivity across animals <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>(Fişek et al. 2014;</a> <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>Jeanne, Fişek et al. 2018)</a>
                                 and structural connectivity within a cell type in the same animal <a href='https://www.biorxiv.org/content/early/2017/08/29/167312' target='_blank'>(Dolan, Ghislain Belliart-Guerin et al. 2018)</a>. LH neuron responses to dours can be explained as a linear summation
                                 of their PN inputs <a href='https://www.ncbi.nlm.nih.gov/pubmed/29909998' target='_blank'>(Fişek et al. 2014)</a> and neurons of similar morphology that share a primary neurite tract (see <b><strong>naming</strong></b> tab) respond similarly <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>. 
-                                In contract to KCs they comprise likely more than ~1390 neurons dividing into ~250 cell types of which ~150 have most of their dendrite within the LH ('core LH' neurons) <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>.
+                                In contrast to KCs they comprise likely more than ~1390 neurons dividing into ~250 cell types of which ~150 have most of their dendrite within the LH ('core LH' neurons) <a href='https://www.biorxiv.org/content/early/2018/06/05/336982' target='_blank'>(Frechter et al. 2018)</a>.
                                 This means that the actual number of KCs and LH neurons is similar, but the diversity of LH neurons is far greater than their MB counterparts, including MBONs. 
                                 In other words, olfactory second->third order neuron divergence in the MB is ~1:15 in terms of cell number, but leads to a 9:1 reduction in dimensionality in terms of MBON putput. 
                                 In the LH, divergence is ~1:9 in terms of cell numbers but ~1:1 in terms of core LH output cell types."),
