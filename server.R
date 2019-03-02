@@ -76,8 +76,8 @@ shinyServer(function(input, output, session) {
                              #shiny::HTML("<div style='position: absolute; left: 220px; top: 150px; z-index: 0; text-align: center; width: 400px; font-size: 30px;'>Loading...</div>"),
                              shiny::div(
                                style=paste0("z-index: 1000;"),
-                               imageOutput(paste0(lines[i],"_brain_high")))),
-                    tabPanel("VNC", imageOutput(paste0(lines[i],"_VNC_high")))
+                               imageOutput(paste0(lines[i],"_brain_high"),width = "1000px", height = "500px"))),
+                    tabPanel("VNC", imageOutput(paste0(lines[i],"_VNC_high"),width = "1000px", height = "1000px"))
         ),
         shiny::br(),
         shiny::fluidRow(
@@ -99,7 +99,7 @@ shinyServer(function(input, output, session) {
           )
         ),
         easyClose = TRUE
-      ))
+        ))
     })
   })
   
@@ -190,8 +190,8 @@ shinyServer(function(input, output, session) {
       filename <- paste0(split_vnc_images[grepl(paste0(lines[i],".jpg"),split_vnc_images)])
       list(src = filename,
            alt = paste0(lines[i]," no image available"),
-           height = "100%",
-           width = "100%",
+           #height = "100%",
+           #width = "100%",
            align = "center"
       )
     }, deleteFile = FALSE)
