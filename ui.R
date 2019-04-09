@@ -1,5 +1,4 @@
 
-# This is the user-interface definition of a Shiny web application.
 # You can find out more about building applications with Shiny here:
 #
 # http://shiny.rstudio.com
@@ -601,6 +600,50 @@ tabPanel("the lateral horn",
           shiny::div(shiny::HTML('<iframe src="https://www.youtube.com/embed/S2yFegvbPfQ" width="840" height="630" frameborder="0" allowfullscreen> </iframe>'),align="center"),
           
           shiny::hr()
-        )
+        ),
+
+#############
+# Downloads #
+#############
+
+tabPanel("download",
+         h3("data"),
+         selectInput(inputId='DownloadAllType', label=NULL, 
+                     choices = c("all morphologies","all odours response data","predicted connectivity", "LH split line information", "Antennal lobe PN summary information", "LH cell type summary", "LHN NBlast scores"),
+                     selected = "all morphologies", multiple=FALSE, selectize=TRUE),
+         downloadButton("DownloadAllData", "download"),
+         h3("R tools"),
+         shiny::HTML("We have developed a <a href='https://github.com/jefferislab' target='_blank'>suite of tools in R</a> to enable users to work with morphological skeleton data for neurons. 
+                     Video demos showing how to use NBLAST and other related resources are available <a href='http://jefferislab.org/si/nblast/www/demos/' target='_blank'>here</a>. 
+                     You can also use NBLAST with data from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a> without needing to use R, through another R Shiny app, <a href='http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/www/nblast_online/' target='_blank'>NBLAST-on-the-fly</a> by James Manton."),
+         h3("Split-GAL4 lines"),
+         shiny::HTML("Split-GAL4 lines found here can be searched and ordered from <a href='http://splitgal4.janelia.org/cgi-bin/splitgal4.cgi' target='_blank'>here</a>."),
+         h3("Source code"),
+         shiny::HTML("The full code for this web app can be downloaded from <a href='https://github.com/jefferislab' target='_blank'>GitHub</a>."),
+         h3("Data sources"),
+         shiny::br(),          
+         shiny::HTML("<b><strong>1.</strong></b> Frechter, S., Bates, A.S., Tootoonian, S., Dolan, M.-J., Manton, J.D., Jamasb, A., Kohl, J., Bock, D., and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
+                     <i>[dye fills for LH morphologies and odour response data from whole-cell patch recordings of single, identified LH neurons]</i>"),
+         shiny::br(),
+         shiny::br(),
+         shiny::HTML("<b><strong>2.</strong></b> Dolan, M-J, Frechter, S., Bates, A.S., Dan, C., Huoviala, P., Roberts, R.J.V., Schlegel, P., Dhawan, S., Tabano, R., Dionne, H., Christoforou, C., Close, K., Sutcliffe, B.,  Giuliani, B., Feng, L., Costa, M., Ihrke, G., Meissner, G., Bock, D., Aso, Y., Rubin, G.M. and Jefferis, G.S.X.E. (2018). Functional and Anatomical Specificity in a Higher Olfactory Centre. Biorxiv.
+                     <i>[split-GAL4 lines for lateral horn neurons, cell type segmentations from confical stack data and single cell <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MCFO</a> skeletons]</i>"),
+         shiny::br(),
+         shiny::br(),
+         shiny::HTML("<b><strong>3.</strong></b> Jeanne, J.M., Fişek, M., and Wilson, R.I. (2018). The Organization of Projections from Olfactory Glomeruli onto Higher-Order Neurons. Neuron.
+                     <i>[some dye fill morphologies, paper reports functional olfactory PN->LH neuron connectivity]</i>"),
+         shiny::br(),
+         shiny::br(),          
+         shiny::HTML("<b><strong>4.</strong></b> Chiang, A.-S., Lin, C.-Y., Chuang, C.-C., Chang, H.-M., Hsieh, C.-H., Yeh, C.-W., Shih, C.-T., Wu, J.-J., Wang, G.-T., Chen, Y.-C., et al. (2011). Three-dimensional reconstruction of brain-wide wiring networks in Drosophila at single-cell resolution. Curr. Biol.
+                     <i>[over Z16,000 single cell morphologies from <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MCFO</a>, increased number skeletons available from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a>]</i>"),
+         
+         shiny::br(),
+         shiny::br(),
+         shiny::HTML("<b><strong>5.</strong></b> Badel, L., Ohta, K., Tsuchimoto, Y., and Kazama, H. (2016). Decoding of context-dependent olfactory behavior in Drosophila. Neuron.<i>
+                     [Calcium imaging of PN dendrites in response to odours]</i>"),
+         shiny::br(),
+         shiny::br(),
+         shiny::HTML("<i>Note: You can cite this Web app by citing Frechter et al. and in addition the relevant publications from which the data you wish to mention originate, e.g. Chiang et al. 2011 for FlyCircuit skeletons.</i>")
+         )
   )
 )

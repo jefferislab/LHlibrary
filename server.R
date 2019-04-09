@@ -565,7 +565,9 @@ shinyServer(function(input, output, session) {
   modal_download_all <-modalDialog(
     fluidPage(
       h3(shiny::strong("download all data"),align="center"),
-      selectInput(inputId='DownloadAllType', label=NULL, choices = c("all morphologies","all odours response data"), selected = "all morphologies", multiple=FALSE, selectize=TRUE),
+      selectInput(inputId='DownloadAllType', label=NULL, 
+                  choices = c("all morphologies","all odours response data","predicted connectivity", "LH split line information", "Antennal lobe PN summary information", "LH cell type summary", "LHN NBlast scores"),
+                  selected = "all morphologies", multiple=FALSE, selectize=TRUE),
       downloadButton("DownloadAllData", "download")
     ),
     easyClose = TRUE
@@ -576,15 +578,35 @@ shinyServer(function(input, output, session) {
     filename = function() {
       if(input$DownloadAllType=="all morphologies"){
         "LH_library.zip"
-      }else{
+      }else if (input$DownloadAllType=="all odours response data"){
         "LH_library_ephys.csv"
+      }else if (input$DownloadAllType=="predicted connectivity"){
+        "LH_library_predicted_connectivity_scores.csv"
+      }else if (input$DownloadAllType=="LHN NBlast scores"){
+        "LH_library_NBlast_scores.csv"
+      }else if (input$DownloadAllType=="LH split line information"){
+        "LH_library_split_line_info.csv"
+      }else if (input$DownloadAllType=="Antennal lobe PN summary information"){
+        "LH_library_PN_summary.csv"
+      }else if (input$DownloadAllType=="LH cell type summary"){
+        "LH_library_cell_type_summary.csv"
       }
     },
     content = function(file) {
       if(input$DownloadAllType=="all morphologies"){
-        download_all_mophologies(dir=file)
-      }else{
+        download_all_mophologies(dir=file, skeleton.types = "DyeFill")
+      }else if (input$DownloadAllType=="all odours response data"){
         utils::write.csv(lhlite::lhn_odour_responses,file = file, row.names = TRUE)
+      }else if (input$DownloadAllType=="predicted connectivity"){
+        utils::write.csv(lhlite::lhns.gloms.overlap,file=file,row.names=TRUE)
+      }else if (input$DownloadAllType=="LHN NBlast scores"){
+        utils::write.csv(lhlite::lh_nblast,file=file,row.names=TRUE)
+      }else if (input$DownloadAllType=="LH split line information"){
+        utils::write.csv(lhlite::lh_line_info,file=file,row.names=TRUE)
+      }else if (input$DownloadAllType=="Antennal lobe PN summary information"){
+        utils::write.csv(lhlite::pn.info,file=file,row.names=TRUE)
+      }else if (input$DownloadAllType=="LH cell type summary"){
+        utils::write.csv(lhlite::cell_type_summary,file=file,row.names=TRUE)
       }
     },
     contentType = "application/zip"
@@ -620,7 +642,7 @@ shinyServer(function(input, output, session) {
       }else{
         cts = unique(vals$neurons[,"cell.type"][vals$neurons[,"cell.type"]%in%rownames(lhlite::lhn_odour_responses)])
         csv = lhlite::lhn_odour_responses[rownames(lhlite::lhn_odour_responses)%in%cts,]
-        write.csv(csv,file = file, row.names = TRUE)
+        utils::write.csv(csv,file = file, row.names = TRUE)
       }
     },
     contentType = "application/zip"
@@ -1207,7 +1229,8 @@ shinyServer(function(input, output, session) {
       score_table <- data.frame(neuron=names(scores), raw=scores, norm=scores/nblast(vals$NBLAST$tracings, vals$NBLAST$tracings), type=sapply(names(scores), function(x) paste0(type_for_neuron(x), collapse=", ")))
       colnames(score_table) <- c("Neuron", "Raw NBLAST score", "Normalised NBLAST score", "Type")
       write.csv(score_table, file, row.names=FALSE)
-    }
+    },
+    contentType = "application/zip"
   )
 
   # Announce when the NBLAST is complete

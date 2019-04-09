@@ -169,14 +169,15 @@ is_lhn_type <- function(type){
   sum(sapply(c("^ON","^LN","^LHN"),grepl,type))>0
 }
 
-
-downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES = names(nl), files = NULL, Force = FALSE, ...){
+downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES = names(nl), files = NULL, Force = TRUE, ...){
   if (grepl("\\.zip", dir)) {
     zip_file = dir
     if (file.exists(zip_file)) {
-      if (!Force)
+      if (!Force){
         stop("Zip file: ", zip_file, "already exists")
-      unlink(zip_file)
+      }else{
+        unlink(zip_file)
+      }
     }
     zip_dir = tools::file_path_as_absolute(dirname(zip_file))
     zip_file = file.path(zip_dir, basename(zip_file))
@@ -235,16 +236,26 @@ downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES =
   invisible(written)
 }
 
-
-download_all_mophologies <- function(dir = paste0(getwd(),"/"),...){
-  file = paste0(dir,"LH_library.zip")
-  all.neurons = subset(lhlite::all.lh.neurons,skeleton.type%in%c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"))
+# downloadskeletons <- function(nl, dir, subdir = NULL, INDICES = names(nl), files = NULL){
+#   fs <- c()
+#   tmpdir <- tempdir()
+#   setwd(tempdir())
+#   for (i in INDICES) {
+#     path <- paste0(tmpdir, i, ".swc")
+#     fs <- c(fs, path)
+#     utils::write.csv(nl[i][[1]]$d, path)
+#   }
+#   zip(zipfile=dir, files=fs)
+# }
+  
+download_all_mophologies <- function(dir, skeleton.types = c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"), ...){
+  all.neurons = subset(lhlite::all.lh.neurons,skeleton.type%in%skeleton.types)
   most.lhins.pnt = subset(all.neurons,type=="PN")
   most.lhins.pnt[,"pnt"] = most.lhins.pnt[,"tract"]
   neurons = c(subset(all.neurons,type!="PN"),most.lhins.pnt)
   attr(neurons,"df") = neurons[,c("cell.type", "anatomy.group", "pnt", "tract","type", "skeleton.type", "coreLH", "id")]
   neurons[,"skeleton.type_pnt"] = paste0(neurons[,"skeleton.type"],"_",neurons[,"pnt"])
-  downloadskeletons(neurons,dir = file,subdir = skeleton.type_pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE, ...)
+  downloadskeletons(neurons,dir = dir,subdir = skeleton.type_pnt,format="swc",files = paste0(cell.type,"_",id),Force = TRUE, ...)
 }
 
 
