@@ -635,7 +635,7 @@ tabPanel("download",
          shiny::br(),
          shiny::br(),          
          shiny::HTML("<b><strong>4.</strong></b> Chiang, A.-S., Lin, C.-Y., Chuang, C.-C., Chang, H.-M., Hsieh, C.-H., Yeh, C.-W., Shih, C.-T., Wu, J.-J., Wang, G.-T., Chen, Y.-C., et al. (2011). Three-dimensional reconstruction of brain-wide wiring networks in Drosophila at single-cell resolution. Curr. Biol.
-                     <i>[over Z16,000 single cell morphologies from <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4460454/' target='_blank'>MCFO</a>, increased number skeletons available from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a>]</i>"),
+                     <i>[over 16,000 single cell morphologies prepared by MARCM, increased number skeletons available from <a href='http://www.flycircuit.tw/' target='_blank'>FlyCircuit</a>]</i>"),
          
          shiny::br(),
          shiny::br(),
