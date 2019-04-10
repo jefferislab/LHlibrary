@@ -248,8 +248,8 @@ downloadskeletons <- function (nl, dir, format = "swc", subdir = NULL, INDICES =
 #   zip(zipfile=dir, files=fs)
 # }
   
-download_all_mophologies <- function(dir, skeleton.types = c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"), ...){
-  all.neurons = subset(lhlite::all.lh.neurons,skeleton.type%in%skeleton.types)
+download_all_mophologies <- function(dir, ...){
+  all.neurons = subset(lhlite::all.lh.neurons,skeleton.type%in%c("FlyCircuit", "DyeFill", "MCFO", "EM", "FijiTracing", "JeanneDyeFill"))
   most.lhins.pnt = subset(all.neurons,type=="PN")
   most.lhins.pnt[,"pnt"] = most.lhins.pnt[,"tract"]
   neurons = c(subset(all.neurons,type!="PN"),most.lhins.pnt)

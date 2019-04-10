@@ -594,7 +594,7 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       if(input$DownloadAllType=="all morphologies"){
-        download_all_mophologies(dir=file, skeleton.types = "DyeFill")
+        download_all_mophologies(dir=file)
       }else if (input$DownloadAllType=="all odours response data"){
         utils::write.csv(lhlite::lhn_odour_responses,file = file, row.names = TRUE)
       }else if (input$DownloadAllType=="predicted connectivity"){
