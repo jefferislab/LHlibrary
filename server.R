@@ -593,7 +593,6 @@ shinyServer(function(input, output, session) {
       }
     },
     content = function(file) {
-      }else if (input$DownloadAllType=="LH split line information"){
       #withProgress('Exporting..', message = 'This takes a minute or two',{
         if(input$DownloadAllType=="all morphologies"){
           download_all_mophologies(dir=file)
