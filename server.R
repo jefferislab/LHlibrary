@@ -566,7 +566,7 @@ shinyServer(function(input, output, session) {
     fluidPage(
       h3(shiny::strong("download all data"),align="center"),
       selectInput(inputId='DownloadAllType', label=NULL, 
-                  choices = c("all morphologies","all odours response data","predicted connectivity", "LH split line information", "Antennal lobe PN summary information", "LH cell type summary", "LHN NBlast scores"),
+                  choices = c("all morphologies","all odour response data","predicted connectivity", "LH split line information", "Antennal lobe PN summary information", "LH cell type summary", "LHN NBlast scores"),
                   selected = "all morphologies", multiple=FALSE, selectize=TRUE),
       downloadButton("DownloadAllData", "download")
     ),
@@ -578,7 +578,7 @@ shinyServer(function(input, output, session) {
     filename = function() {
       if(input$DownloadAllType=="all morphologies"){
         "LH_library.zip"
-      }else if (input$DownloadAllType=="all odours response data"){
+      }else if (input$DownloadAllType=="all odour response data"){
         "LH_library_ephys.csv"
       }else if (input$DownloadAllType=="predicted connectivity"){
         "LH_library_predicted_connectivity_scores.csv"
@@ -593,21 +593,24 @@ shinyServer(function(input, output, session) {
       }
     },
     content = function(file) {
-      if(input$DownloadAllType=="all morphologies"){
-        download_all_mophologies(dir=file)
-      }else if (input$DownloadAllType=="all odours response data"){
-        utils::write.csv(lhlite::lhn_odour_responses,file = file, row.names = TRUE)
-      }else if (input$DownloadAllType=="predicted connectivity"){
-        utils::write.csv(lhlite::lhns.gloms.overlap,file=file,row.names=TRUE)
-      }else if (input$DownloadAllType=="LHN NBlast scores"){
-        utils::write.csv(lhlite::lh_nblast,file=file,row.names=TRUE)
       }else if (input$DownloadAllType=="LH split line information"){
-        utils::write.csv(lhlite::lh_line_info,file=file,row.names=TRUE)
-      }else if (input$DownloadAllType=="Antennal lobe PN summary information"){
-        utils::write.csv(lhlite::pn.info,file=file,row.names=TRUE)
-      }else if (input$DownloadAllType=="LH cell type summary"){
-        utils::write.csv(lhlite::cell_type_summary,file=file,row.names=TRUE)
-      }
+      #withProgress('Exporting..', message = 'This takes a minute or two',{
+        if(input$DownloadAllType=="all morphologies"){
+          download_all_mophologies(dir=file)
+        }else if (input$DownloadAllType=="all odour response data"){
+          utils::write.csv(lhlite::lhn_odour_responses,file = file, row.names = TRUE)
+        }else if (input$DownloadAllType=="predicted connectivity"){
+          utils::write.csv(lhlite::lhns.gloms.overlap,file=file,row.names=TRUE)
+        }else if (input$DownloadAllType=="LHN NBlast scores"){
+          utils::write.csv(lhlite::lh_nblast,file=file,row.names=TRUE)
+        }else if (input$DownloadAllType=="LH split line information"){
+          utils::write.csv(lhlite::lh_line_info,file=file,row.names=TRUE)
+        }else if (input$DownloadAllType=="Antennal lobe PN summary information"){
+          utils::write.csv(lhlite::pn.info,file=file,row.names=TRUE)
+        }else if (input$DownloadAllType=="LH cell type summary"){
+          utils::write.csv(lhlite::cell_type_summary,file=file,row.names=TRUE)
+        }
+      #})
     },
     contentType = "application/zip"
   )
